@@ -12,7 +12,7 @@ const {
 // const server = require("./server");
 
 
-let win
+let win, server
 
 
 function createMainWindow () {
@@ -29,10 +29,14 @@ function createMainWindow () {
   }
 
 
-  win.loadURL("http:127.0.0.1:8080/");
+  server.on("message", m => {
+    console.log("[server]", m);
+    if (m == "server-ready") {
+      win.loadURL("http:127.0.0.1:8080/");
 
-
-  win.on("ready-to-show", () => win.show());
+      win.on("ready-to-show", () => win.show());
+    }
+  });
 
 
   win.on("close", () => { if(win) win = null; });
@@ -42,7 +46,7 @@ function createMainWindow () {
 
 app.whenReady().then(() => {
 
-  const ps = fork(path.join(__dirname, ("./server.js")));
+  server = fork(path.join(__dirname, ("./server.js")));
   createMainWindow();
 
   app.on("activate", () => {
@@ -50,10 +54,21 @@ app.whenReady().then(() => {
       createMainWindow();
   });
 
+  server.on("exit", (code, signal) => {
+    console.log("Server exited");
+    console.log("code", code);
+    console.log("signal", signal);
+  });
+
 });
 
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin")
+  if (process.platform !== "darwin") {
     app.quit();
+    console.log("all window close")
+    if (server) {
+      server.kill('SIGINT'); // kill server process once the app is closed
+    }
+  }
 });

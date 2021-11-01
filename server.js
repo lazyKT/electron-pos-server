@@ -30,4 +30,7 @@ app.use("/api/meds", medicine);
 app.use("/api/tags", tag);
 
 
-app.listen(8080, () => console.log("Server is running at PORT: 8080"));
+app.listen(8080, () => {
+  console.log("Server is running at PORT: 8080");
+  process.send("server-ready");
+});
