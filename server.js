@@ -5,6 +5,7 @@ const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
 
+let PORT
 
 /**
 # Connect to Mongo Db
@@ -30,7 +31,15 @@ app.use("/api/meds", medicine);
 app.use("/api/tags", tag);
 
 
-app.listen(8080, () => {
-  console.log("Server is running at PORT: 8080");
+process.on("message", m => {
+  if (m === "PORT") {
+    process.send(`server-port:${PORT}`);
+  }
+});
+
+
+const server = app.listen(0, () => {
+  console.log("Server is running at PORT:", server.address().port);
+  PORT = server.address().port;
   process.send("server-ready");
 });

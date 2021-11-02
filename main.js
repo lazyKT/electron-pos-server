@@ -23,7 +23,8 @@ function createMainWindow () {
       show: false,
       webPreferences: {
         contextIsolation: true,
-        nodeIntegration: false
+        nodeIntegration: false,
+        preload: path.join(__dirname, "./electron_app/preload.js")
       }
     });
   }
@@ -31,13 +32,16 @@ function createMainWindow () {
 
   server.on("message", m => {
     console.log("[server]", m);
-    if (m == "server-ready") {
-      win.loadURL("http:127.0.0.1:8080/");
-
-      win.on("ready-to-show", () => win.show());
+    if (m === "server-ready") {
+      server.send("PORT");
+    }
+    else if (m.includes("server-port:")) {
+      console.log(`Server is running at PORT:${m.split(':')[1]}`)
+      win.loadURL(`http:127.0.0.1:${m.split(':')[1]}/`);
     }
   });
 
+  win.on("ready-to-show", () => win.show());
 
   win.on("close", () => { if(win) win = null; });
 }
