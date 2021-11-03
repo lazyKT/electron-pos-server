@@ -12,8 +12,15 @@ let PORT
 **/
 const dbURL = "mongodb://localhost/pharmacy";
 mongoose.connect(dbURL)
-  .then(() => console.log("MongoDB Connected."))
-  .catch(err => console.error("Error Connecting MongoDB: \n", err));
+  .then(() => {
+    console.log("MongoDB Connected.");
+    process.send('{"name": "dbstatus", "status": "connected"}');
+  })
+  .catch(err => {
+    console.error("Error Connecting MongoDB: \n", err);
+    process.send('{"name": "dbstatus", "status": "error"}');
+    process.stderr.write(`${err}\n`);
+  });
 
 
 const home = require("./express_server/routes/home");
