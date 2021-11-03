@@ -14,12 +14,12 @@ const dbURL = "mongodb://localhost/pharmacy";
 mongoose.connect(dbURL)
   .then(() => {
     console.log("MongoDB Connected.");
-    process.send('{"name": "dbstatus", "status": "connected"}');
+    // process.send('{"name": "dbstatus", "status": "connected"}');
   })
   .catch(err => {
     console.error("Error Connecting MongoDB: \n", err);
-    process.send('{"name": "dbstatus", "status": "error"}');
-    process.stderr.write(`${err}\n`);
+    // process.send(`{"name": "dbstatus", "status": "error"}`);
+    // process.stderr.write(`{"status" : "error", "message": "${err}"}\n`);
   });
 
 
@@ -45,9 +45,10 @@ process.on("message", m => {
 });
 
 
-const server = app.listen(0, () => {
-  console.log("Server is running at PORT:", server.address().port);
-  PORT = server.address().port;
-  process.send("server-ready");
-  process.send(`server-port:${PORT}`);
+const server = app.listen(8080, () => {
+  // PORT = server.address().port;
+  PORT = 8080;
+  console.log("Server is running at PORT:", PORT);
+  // process.send("server-ready");
+  // process.send(`server-port:${PORT}`);
 });

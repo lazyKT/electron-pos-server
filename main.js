@@ -9,6 +9,9 @@ const {
   BrowserWindow
 } = require("electron");
 
+
+const Logger = require("./logger.js");
+
 // const server = require("./server");
 
 
@@ -71,6 +74,19 @@ function createMainWindow () {
         }
       }
     });
+
+
+    server.stderr.on("data", m => {
+      try {
+        const errObj = JSON.parse(m.toString());
+        const logger = new Log(errObj.status, errObj.message);
+        win.webContents.send("logs", logger.toString());
+      }
+      catch (err) {
+        console.error(err);
+      }
+    });
+
   });
 }
 

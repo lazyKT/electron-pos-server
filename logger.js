@@ -9,4 +9,8 @@ module.exports = class Logger {
 
   getMessage = () => this.message;
 
+  toString() {
+    return `[${this.status}] ${this.message}`;
+  }
+
 };

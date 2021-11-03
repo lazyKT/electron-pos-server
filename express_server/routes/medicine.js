@@ -23,7 +23,6 @@ router.get('/', async (req, res) => {
   try {
 
     if(req.query.tag) {
-      console.log('tag', req.query.tag);
 
       const tag = await findTag(req.query.tag);
 
@@ -90,7 +89,6 @@ router.get('/:id', async (req, res) => {
 /** get meds by tag name**/
 router.get('/by-tag', async (req, res) => {
   try {
-    console.log('tag', req.query.tag);
     const tag = await findTag(req.query.tag);
 
     if (!tag) res.status(404).send("Tag(s) not found!");
@@ -104,6 +102,50 @@ router.get('/by-tag', async (req, res) => {
   }
 });
 
+
+/** edit medicine */
+router.put('/:id', async (req, res) => {
+  try {
+    const tag = await findTag(req.body.tag);
+
+    if (!tag)
+      return res.status(404).send("Tag not found!");
+
+    // const filter = { id: req.params.id };
+    const update = Object.assign(req.body, { updated : new Date() });
+    let updatedMedicine = await Medicine.findByIdAndUpdate(
+      req.params.id,
+      update,
+      { new: true }
+    );
+
+    if (!updatedMedicine)
+      return res.status(404).send("Medicine not found");
+
+    res.status(200).send(updatedMedicine);
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).send(`Error Editing Medicine: ${error}`);
+  }
+});
+
+
+/** delete medicine **/
+router.delete('/:id', async (req, res) => {
+  try {
+    const deletedMed = await Medicine.findByIdAndRemove(req.params.id);
+
+    if (!deletedMed)
+      return rs.status(404).send("Med not found");
+
+    res.send(deletedMed);
+  }
+  catch (error) {
+    process.stderr.write('{"status" : "error", "message" : "error deleting medicine"}');
+    res.status(500).send(`Error Deletion Medicine: ${error}`);
+  }
+});
 
 
 module.exports = router;

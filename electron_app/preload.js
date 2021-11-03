@@ -11,7 +11,8 @@ const {
 const ALLOWED_RECEIVED_CHANNELS = [
   "server-status",
   "server-socket-info",
-  "database-status"
+  "database-status",
+  "logs"
 ];
 
 

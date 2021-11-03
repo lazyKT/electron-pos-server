@@ -3,8 +3,10 @@ const router = express.Router();
 
 
 const { Tag } = require("../schemas/tag");
+const { Medicine } = require("../schemas/medicine");
 
 
+/** get all tags */
 router.get("/", async (req, res) => {
   const tags = await Tag.find();
 
@@ -13,6 +15,7 @@ router.get("/", async (req, res) => {
 
 
 
+/** create new tag **/
 router.post("/", async (req, res) => {
   try {
     let newTag = new Tag({
@@ -31,6 +34,7 @@ router.post("/", async (req, res) => {
 });
 
 
+/** get tag by id **/
 router.get("/:id", async (req, res) => {
   try {
     const tag = await Tag.findById (req.params.id);
@@ -41,6 +45,59 @@ router.get("/:id", async (req, res) => {
   }
   catch (error) {
     res.status(500).send(`Error reteriving tag by id: ${error}`);
+  }
+});
+
+
+/** edit tag by id **/
+router.put("/:id", async (req, res) => {
+  try {
+    const update = Object.assign(req.body, { updated: new Date() });
+
+    const updatedTag = await Tag.findByIdAndUpdate(
+      req.params.id,
+      update,
+      { new : true }
+    );
+
+    if (!updatedTag)
+      return res.status(404).send("Tag Not Found");
+
+    res.send(updatedTag);
+  }
+  catch (error) {
+    res.status(500).send(`Error Editing Tag: ${error}`);
+  }
+});
+
+
+
+/**
+  Delete Tag By Id.
+  *** WARNING ***
+  If the tag is removed, every medicine related to the deleted tag also be removed.
+**/
+router.delete("/:id", async (req, res) => {
+  try {
+    const deletedTag = await Tag.findByIdAndRemove(req.params.id);
+
+    if (!deletedTag)
+      return res.status(404).send("Tag Not Found");
+
+    const tagName = deletedTag.name;
+
+    const removedMeds = await Medicine.deleteMany(
+      {
+        tag : tagName
+      }
+    );
+
+    res.status(204).end("");
+  }
+  catch (error) {
+    // process.stderror.write('{"status": "erorr", "message" : "error deleting tag"}');
+    console.error(`Error Deleting Tag: ${error}`);
+    res.status(500).send(`Error Deleting Tag: ${error}`);
   }
 });
 
