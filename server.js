@@ -49,4 +49,5 @@ const server = app.listen(0, () => {
   console.log("Server is running at PORT:", server.address().port);
   PORT = server.address().port;
   process.send("server-ready");
+  process.send(`server-port:${PORT}`);
 });
