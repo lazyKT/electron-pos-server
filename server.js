@@ -5,20 +5,23 @@ const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
 
+const Config = require("./express_server/config");
+
 let PORT
 
 /**
 # Connect to Mongo Db
 **/
-const dbURL = "mongodb://localhost/pharmacy";
-mongoose.connect(dbURL)
+mongoose.connect(Config.dbURL)
   .then(() => {
     console.log("MongoDB Connected.");
-    // process.send('{"name": "dbstatus", "status": "connected"}');
+    Config.dbstaus = "connected";
+    process.send('{"name": "dbstatus", "status": "connected"}');
   })
   .catch(err => {
+    Config.dbStatus = "error";
     console.error("Error Connecting MongoDB: \n", err);
-    // process.send(`{"name": "dbstatus", "status": "error"}`);
+    process.send(`{"name": "dbstatus", "status": "error"}`);
     // process.stderr.write(`{"status" : "error", "message": "${err}"}\n`);
   });
 
@@ -51,6 +54,6 @@ const server = app.listen(8080, () => {
   // PORT = server.address().port;
   PORT = 8080;
   console.log("Server is running at PORT:", PORT);
-  // process.send("server-ready");
-  // process.send(`server-port:${PORT}`);
+  process.send("server-ready");
+  process.send(`server-port:${PORT}`);
 });

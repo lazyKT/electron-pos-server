@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="index.css">
   </head>
   <body>
-    <div class="p-3">
+    <div class="p-2">
       <h5 class="text-muted mb-4">Electron Server</h5>
       <small class="text-success" id="socket-info"></small>
       <div class="d-flex justify-content-between p-2">
@@ -23,12 +23,15 @@
           <div class="status" id="server-status">
             Disconnected
           </div>
+          <button class="btn btn-warning w-100 mt-2" id="stop-server" disabled>Stop</button>
         </div>
-        <div class="w-25">
+        <div class="d-flex justify-content-center flex-column w-25">
           <h6 class="text-muted text-center">Database Status</h6>
           <div class="status" id="db-status">
             Disconnected
           </div>
+          <button class="btn btn-secondary w-100 mt-2" id="rc-db" disabled>Reconnect</button>
+          <button class="btn btn-warning w-100 mt-2" id="dc-db" disabled>Disconnect</button>
         </div>
       </div>
 

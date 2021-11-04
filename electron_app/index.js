@@ -1,6 +1,9 @@
 // DOM Nodes
 const serverStatus = document.getElementById("server-status");
 const dbStatus = document.getElementById("db-status");
+const reconnectDB = document.getElementById("rc-db");
+const disconnectDB = document.getElementById("dc-db");
+const stopServer = document.getElementById("stop-server");
 const socketInfo = document.getElementById("socket-info");
 const logs = document.getElementById("logs");
 
@@ -12,33 +15,48 @@ const logs = document.getElementById("logs");
 
 
 window.api.receive("server-socket-info", socket => {
-  console.log("server-socket-info", socket);
+
   socketInfo.innerHTML = `Server running at PORT: ${socket}`;
   addLogs(`[info] server running at PORT: ${socket}`);
 });
 
 
+window.api.receive("server-stop", message => {
+  stopServer.innerHTML = "Terminate";
+  addLogs(message);
+  serverStatus.innerHTML = "disconnected";
+  serverStatus.style.background = "gray";
+});
+
+
 window.api.receive("server-status", status => {
-  console.log('server-status', status);
+
   updateStatus(serverStatus, status);
   if (status === "connected") {
     addLogs(`[${status}] server connected`);
     addLogs("[info] trying to connect database");
     dbStatus.innerHTML = "starting...";
+    stopServer.removeAttribute("disabled");
   }
-  else if (status === "error")
+  else if (status === "error") {
     addLogs(`[${status}] failed to start server`);
+  }
 });
 
 
 window.api.receive("database-status", status => {
-  console.log("database-status", status);
+
   updateStatus(dbStatus, status);
   if (status === "connected") {
     addLogs(`[${status}] database connected`);
+    reconnectDB.setAttribute("disabled", true);
+    disconnectDB.removeAttribute("disabled");
   }
-  else if (status === "error")
+  else if (status === "error") {
     addLogs(`[${status}] failed to connect database`);
+    reconnectDB.removeAttribute("disabled");
+    disconnectDB.setAttribute("disabled", true);
+  }
 });
 
 
@@ -46,6 +64,51 @@ window.api.receive("logs", log => {
   console.log(log.toString());
   addLogs(log);
 });
+
+
+/** reconnect database **/
+reconnectDB.addEventListener("click", async e => {
+  try {
+    addLogs("[info] reconnecting to server ...");
+
+    reconnectDB.setAttribute("disabled", true);
+    reconnectDB.innnerHTML = "Reconnecting ...";
+
+    const url = "http://127.0.0.1:8080/db-reset";
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type" : "application/json",
+        "Accept" : "application/json"
+      }
+    });
+
+    console.log(response);
+
+    if (response.ok) {
+      addLogs("[info] successfully connected to database");
+      reconnectDB.innerHTML = "Reconnect";
+    }
+    else {
+      // error
+      addLogs("[error] Failed to connect to database");
+      reconnectDB.removeAttribute("disabled");
+      reconnectDB.innerHTML = "Reconnect";
+    }
+  }
+  catch (error) {
+    alert(`Error Restarting Database: ${error}`);
+  }
+});
+
+
+/** stop server **/
+stopServer.addEventListener("click", e => {
+  addLogs ("[info] terminating server ...");
+  stopServer.setAttribute("disabled", true);
+  stopServer.innerHTML = "Terminating ...";
+  window.api.send("stop-server", "");
+})
 
 
 function updateStatus (dom, status, log) {

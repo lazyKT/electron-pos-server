@@ -12,12 +12,13 @@ const ALLOWED_RECEIVED_CHANNELS = [
   "server-status",
   "server-socket-info",
   "database-status",
-  "logs"
+  "logs",
+  "server-stop"
 ];
 
 
 const ALLOWED_SEND_CHANNELS = [
-
+  "stop-server",
 ];
 
 

@@ -6,7 +6,8 @@ const path = require("path");
 const { fork } = require("child_process");
 const {
   app,
-  BrowserWindow
+  BrowserWindow,
+  ipcMain
 } = require("electron");
 
 
@@ -22,7 +23,7 @@ function createMainWindow () {
   if (!win) {
     win = new BrowserWindow ({
       width: 800,
-      height: 500,
+      height: 600,
       show: false,
       webPreferences: {
         contextIsolation: true,
@@ -79,12 +80,27 @@ function createMainWindow () {
     server.stderr.on("data", m => {
       try {
         const errObj = JSON.parse(m.toString());
-        const logger = new Log(errObj.status, errObj.message);
+        const logger = new Logger(errObj.status, errObj.message);
         win.webContents.send("logs", logger.toString());
       }
       catch (err) {
         console.error(err);
       }
+    });
+
+    server.on("exit", (code, signal) => {
+
+      const logger = new Logger("info", `Server Terminated with signal : ${signal}`);
+      win.webContents.send("server-stop", logger.toString());
+
+      // console.log("Sever stopped gracefully")
+    });
+
+    // stop server
+    ipcMain.on("stop-server", (event, args) => {
+      // console.log("stop-server ipc received.")
+      if (server)
+        server.kill('SIGTERM'); // stop server process
     });
 
   });
@@ -105,12 +121,6 @@ app.whenReady().then(() => {
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0)
       createMainWindow();
-  });
-
-  server.on("exit", (code, signal) => {
-    console.log("Server exited");
-    console.log("code", code);
-    console.log("signal", signal);
   });
 
 });

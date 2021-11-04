@@ -42,6 +42,10 @@ router.post("/", async (req, res) => {
     if (error)
       return res.status(400).send(erorr.details[0].message);
 
+    const existingEmp = await Employee.findOne({"username" : req.body.username});
+    if (existingEmp)
+      return res.status(400).send("User Already Exists!");
+
     let emp = new Employee({
       username: req.body.username,
       level: req.body.level,
