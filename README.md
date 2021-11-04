@@ -5,7 +5,7 @@
 ### How to run
 ```
 npm init -y
-npm install --save-dev electron express joi mongoose nodemon 
+npm install --save-dev electron express joi mongoose nodemon @joi/date bcryptjs
 ```
 
 ```
