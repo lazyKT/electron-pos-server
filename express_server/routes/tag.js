@@ -49,7 +49,20 @@ router.post("/", async (req, res) => {
     res.send(newTag);
   }
   catch (error) {
-    res.send(`Error Creating Tag: ${error}`);
+    res.status(500).send(`Error Creating Tag: ${error}`);
+  }
+});
+
+
+/* get total number of tags available */
+router.get('/count', async (req, res) => {
+  try {
+    const tagCount = await Tag.count();
+
+    res.status(200).send(JSON.stringify({"count" : tagCount}));
+  }
+  catch (error) {
+    res.status(500).send(JSON.stringify({"message" : `Error Reteriving Tag Counts: ${error}`}));
   }
 });
 
@@ -64,7 +77,7 @@ router.get("/:id", async (req, res) => {
     res.send(tag);
   }
   catch (error) {
-    res.status(500).send(`Error reteriving tag by id: ${error}`);
+    res.status(500).send(JSON.stringify({"message": `Error reteriving tag by id: ${error}`}));
   }
 });
 

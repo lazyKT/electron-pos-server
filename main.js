@@ -77,16 +77,17 @@ function createMainWindow () {
     });
 
 
-    server.stderr.on("data", m => {
-      try {
-        const errObj = JSON.parse(m.toString());
-        const logger = new Logger(errObj.status, errObj.message);
-        win.webContents.send("logs", logger.toString());
-      }
-      catch (err) {
-        console.error(err);
-      }
-    });
+    /** for later **/
+    // server.stderr.on("data", m => {
+    //   try {
+    //     const errObj = JSON.parse(m.toString());
+    //     const logger = new Logger(errObj.status, errObj.message);
+    //     win.webContents.send("logs", logger.toString());
+    //   }
+    //   catch (err) {
+    //     console.error(err);
+    //   }
+    // });
 
     server.on("exit", (code, signal) => {
 

@@ -34,6 +34,9 @@ router.get('/', async (req, res) => {
 
     let page = 0;
     let limit = 10;
+    let sort = "name"
+    let order = 1;
+    let sortObj = {};
 
     if (req.query.page)
       page = parseInt(req.query.page) - 1;
@@ -41,11 +44,22 @@ router.get('/', async (req, res) => {
     if (req.query.limit)
       limit = parseInt(req.query.limit);
 
+    if (req.query.order)
+      order = parseInt(req.query.order);
+
+    if (req.query.sort)
+      sort = req.query.sort;
+
+    sortObj[sort] = order;
+
     const meds = await Medicine.find(
+      {},
       null,
-      null,
-      { skip: page * limit , limit}
-    );
+      {
+        skip: page * limit,
+        limit
+      }
+    ).sort(sortObj);
 
     res.send(meds);
   }
@@ -75,7 +89,7 @@ router.post('/', async (req, res) => {
       productNumber: req.body.productNumber,
       description: req.body.description,
       price: req.body.price,
-      approve: req.body.approve, 
+      approve: req.body.approve,
     };
 
     const med = await Medicine.findOneAndUpdate(
@@ -91,6 +105,19 @@ router.post('/', async (req, res) => {
   }
   catch (error) {
     res.status(500).send(JSON.stringify({"message" : `Error Adding Medicine: ${error}`}));
+  }
+});
+
+
+/** total num of medicines **/
+router.get('/count', async (req, res) => {
+  try {
+    const medCounts = await Medicine.count();
+
+    res.status(200).send(JSON.stringify({"count" : medCounts}));
+  }
+  catch (error) {
+    res.status(500).send(JSON.stringify({"message" : `Error Getting Medicine Counts: ${error}`}));
   }
 });
 
