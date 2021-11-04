@@ -11,6 +11,9 @@ router.get("/", async (req, res) => {
 
   let page = 0;
   let limit = 10;
+  let sort = "name";
+  let order = 1;
+  let sortObj = {};
 
   if (req.query.page)
     page = parseInt(req.query.page) - 1;
@@ -18,11 +21,19 @@ router.get("/", async (req, res) => {
   if (req.query.limit)
     limit = parseInt(req.query.limit);
 
+  if (req.query.order)
+    order = parseInt(req.query.order);
+
+  if (req.query.sort)
+    sort = req.query.sort;
+
+  sortObj[sort] = order;
+
   const tags = await Tag.find(
     null,
     null,
     { skip: page * limit, limit}
-  );
+  ).sort(sortObj);
 
   res.send(tags);
 });
