@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const Joi = require("joi")
+              .extend (require("@joi/date"));
 
 
 const tagSchema = new mongoose.Schema ({
@@ -27,7 +29,21 @@ const tagSchema = new mongoose.Schema ({
 });
 
 
+function validateTag (tag) {
+  const schema = Joi.object({
+    name: Joi.string().required(),
+    lowQtyAlert: Joi.number().integer().min(5).required(),
+    expiryDateAlert: Joi.number().integer().min(30).required()
+  });
+
+  const validationResult = schema.validate(tag);
+
+  return validationResult;
+}
+
+
 const Tag = new mongoose.model ("Tag", tagSchema);
 
 
 exports.Tag = Tag;
+exports.validateTag = validateTag;

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 
-const { Medicine } = require("../schemas/medicine");
+const { Medicine, validateMeds } = require("../schemas/medicine");
 const { Tag } = require("../schemas/tag");
 
 
@@ -21,7 +21,6 @@ const findTag = async name => {
 
 router.get('/', async (req, res) => {
   try {
-
     if(req.query.tag) {
 
       const tag = await findTag(req.query.tag);
@@ -33,7 +32,20 @@ router.get('/', async (req, res) => {
       return res.send(meds);
     }
 
-    const meds = await Medicine.find();
+    let page = 0;
+    let limit = 10;
+
+    if (req.query.page)
+      page = parseInt(req.query.page) - 1;
+
+    if (req.query.limit)
+      limit = parseInt(req.query.limit);
+
+    const meds = await Medicine.find(
+      null,
+      null,
+      { skip: page * limit , limit}
+    );
 
     res.send(meds);
   }
@@ -43,25 +55,31 @@ router.get('/', async (req, res) => {
 });
 
 
-
+/** add new meds, or update if existed */
 router.post('/', async (req, res) => {
   try {
+
+    const { error } = validateMeds(req.body);
+    if (error)
+      return res.status(400).send(error.details[0].message);
+
     const tag = await findTag(req.body.tag);
     if (!tag)
       return res.status(404).send("Tag not found!");
 
+    const filter = { name: req.body.name, expiry: new Date(req.body.expiry).toISOString()};
+    const update = { qty: req.body.qty, tag: req.body.tag };
 
-    let newMeds = new Medicine({
-      name: req.body.name,
-      description: req.body.description,
-      tag: tag.name,
-      qty: req.body.qty,
-      expiry: req.body.expiry
-    });
+    const med = await Medicine.findOneAndUpdate(
+      filter,
+      update,
+      {
+        new: true,
+        upsert: true
+      }
+    );
 
-    newMeds = await newMeds.save();
-
-    res.send(newMeds);
+    res.status(201).send(med);
   }
   catch (error) {
     res.status(500).send(`Error Creating New Meds: ${error}`);
@@ -74,7 +92,7 @@ router.post('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const med = await Medicine.findById (req.params.id);
-
+    // console.log('expiry', med)
     if (!med)
       return res.status(404).send('Med(s) Not Found!');
 

@@ -2,13 +2,27 @@ const express = require("express");
 const router = express.Router();
 
 
-const { Tag } = require("../schemas/tag");
+const { Tag, validateTag } = require("../schemas/tag");
 const { Medicine } = require("../schemas/medicine");
 
 
 /** get all tags */
 router.get("/", async (req, res) => {
-  const tags = await Tag.find();
+
+  let page = 0;
+  let limit = 10;
+
+  if (req.query.page)
+    page = parseInt(req.query.page) - 1;
+
+  if (req.query.limit)
+    limit = parseInt(req.query.limit);
+
+  const tags = await Tag.find(
+    null,
+    null,
+    { skip: page * limit, limit}
+  );
 
   res.send(tags);
 });
@@ -18,6 +32,11 @@ router.get("/", async (req, res) => {
 /** create new tag **/
 router.post("/", async (req, res) => {
   try {
+
+    const { error } = validateTag(req.body);
+    if (error)
+      return res.status(400).send(error.details[0].message);
+
     let newTag = new Tag({
       name: req.body.name,
       lowQtyAlert: req.body.lowQtyAlert,
@@ -100,6 +119,7 @@ router.delete("/:id", async (req, res) => {
     res.status(500).send(`Error Deleting Tag: ${error}`);
   }
 });
+
 
 
 module.exports = router;
