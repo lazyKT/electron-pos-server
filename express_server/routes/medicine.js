@@ -68,7 +68,15 @@ router.post('/', async (req, res) => {
       return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
 
     const filter = { productNumber: req.body.productNumber, expiry: new Date(req.body.expiry).toISOString()};
-    const update = { qty: req.body.qty, tag: req.body.tag };
+    const update = {
+      qty: req.body.qty,
+      tag: req.body.tag,
+      name: req.body.name,
+      productNumber: req.body.productNumber,
+      description: req.body.description,
+      price: req.body.price,
+      approve: req.body.approve, 
+    };
 
     const med = await Medicine.findOneAndUpdate(
       filter,

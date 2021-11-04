@@ -34,7 +34,7 @@ function createMainWindow () {
   }
 
   win.loadFile(path.join(__dirname, "./electron_app/index.html"));
-  win.openDevTools();
+  // win.openDevTools();
 
   win.on("ready-to-show", () => win.show());
 
@@ -47,7 +47,7 @@ function createMainWindow () {
     **/
 
     server.on("message", m => {
-      
+
       if (m === "server-ready") {
         win.webContents.send("server-status", "connected");
       }
