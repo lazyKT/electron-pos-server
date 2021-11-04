@@ -14,6 +14,7 @@
   "license": "ISC",
   "devDependencies": {
     "@joi/date": "^2.1.0",
+    "bcryptjs": "^2.4.3",
     "electron": "^15.3.0",
     "express": "^4.17.1",
     "joi": "^17.4.2",
