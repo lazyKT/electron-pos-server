@@ -47,12 +47,12 @@ function createMainWindow () {
     **/
 
     server.on("message", m => {
-      console.log("[server]", m);
+      
       if (m === "server-ready") {
         win.webContents.send("server-status", "connected");
       }
       else if (m.includes("server-port:")) {
-        console.log(`Server is running at PORT:${m.split(':')[1]}`)
+        // console.log(`Server is running at PORT:${m.split(':')[1]}`)
         // win.loadURL(`http:127.0.0.1:${m.split(':')[1]}/`);
         /**
         # Send Server Socket Info to renderer
@@ -64,9 +64,9 @@ function createMainWindow () {
         try {
           const messageObject = JSON.parse(m);
           const { name } = messageObject;
-          console.log('status name', name);
+
           if (name === "dbstatus") {
-            console.log('inside if. status name', name);
+
             win.webContents.send("database-status", messageObject.status);
           }
         }

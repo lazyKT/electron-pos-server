@@ -40,11 +40,11 @@ router.post("/", async (req, res) => {
   try {
     const { error } = validateEmployee(req.body);
     if (error)
-      return res.status(400).send(erorr.details[0].message);
+      return res.status(400).send(error.details[0].message);
 
     const existingEmp = await Employee.findOne({"username" : req.body.username});
     if (existingEmp)
-      return res.status(400).send("User Already Exists!");
+      return res.status(400).send(JSON.stringify({"message" : "User Already Exists!"}));
 
     let emp = new Employee({
       username: req.body.username,
@@ -84,6 +84,25 @@ router.post("/login", async (req, res) => {
   }
   catch (error) {
     res.status(500).send(`Error Login Employee: ${error}`);
+  }
+});
+
+
+
+/* filter employees by search keyword */
+router.get("/search", async (req, res) => {
+  try {
+
+    // find by username
+    const emps = await Employee.find(
+      {"username" : {$regex: req.query.q, $options: "i"}}
+    );
+
+    res.status(200).send(emps);
+
+  }
+  catch (error) {
+    res.status(500).send(`Error Seraching Employee Data: ${error}`);
   }
 });
 

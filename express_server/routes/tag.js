@@ -35,12 +35,13 @@ router.post("/", async (req, res) => {
 
     const { error } = validateTag(req.body);
     if (error)
-      return res.status(400).send(error.details[0].message);
+      return res.status(400).send(JSON.stringify({"message" : `${error.details[0].message}`}));
 
     let newTag = new Tag({
       name: req.body.name,
       lowQtyAlert: req.body.lowQtyAlert,
-      expiryDateAlert: req.body.expiryDateAlert
+      expiryDateAlert: req.body.expiryDateAlert,
+      location: req.body.location
     });
 
     newTag = await newTag.save();

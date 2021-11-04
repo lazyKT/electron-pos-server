@@ -10,6 +10,10 @@ const medicineSchema = new mongoose.Schema ({
     minLength: 4,
     maxLength: 64
   },
+  productNumber: {
+    type: String,
+    required: true
+  },
   description: String,
   tag: [String],
   qty: {
@@ -55,6 +59,7 @@ function validateMeds (med) {
         'date.format.javascript': `'expiry' date fromat wrong javascript`,
         'date.format.unix': `'expiry' date format wrong unix`
       }),
+    productNumber: Joi.string().required(),
     tag: Joi.string().required(),
     price: Joi.number().required(),
     description: Joi.string().required(),

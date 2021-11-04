@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
 
       const tag = await findTag(req.query.tag);
 
-      if (!tag) return res.status(404).send("Tag(s) not found!");
+      if (!tag) return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
 
       const meds = await Medicine.find({'tag': tag.name});
 
@@ -50,7 +50,7 @@ router.get('/', async (req, res) => {
     res.send(meds);
   }
   catch (error) {
-    res.status(500).send(`Error reteriving medicines: ${error}`);
+    res.status(500).send(JSON.stringify({"message" : `Error Getting Medicine: ${error}`}));
   }
 });
 
@@ -61,13 +61,13 @@ router.post('/', async (req, res) => {
 
     const { error } = validateMeds(req.body);
     if (error)
-      return res.status(400).send(error.details[0].message);
+      return res.status(400).send(JSON.stringify({"message" : `${error.details[0].message}`}));
 
     const tag = await findTag(req.body.tag);
     if (!tag)
-      return res.status(404).send("Tag not found!");
+      return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
 
-    const filter = { name: req.body.name, expiry: new Date(req.body.expiry).toISOString()};
+    const filter = { productNumber: req.body.productNumber, expiry: new Date(req.body.expiry).toISOString()};
     const update = { qty: req.body.qty, tag: req.body.tag };
 
     const med = await Medicine.findOneAndUpdate(
@@ -82,7 +82,47 @@ router.post('/', async (req, res) => {
     res.status(201).send(med);
   }
   catch (error) {
-    res.status(500).send(`Error Creating New Meds: ${error}`);
+    res.status(500).send(JSON.stringify({"message" : `Error Adding Medicine: ${error}`}));
+  }
+});
+
+
+/** get meds by tag name**/
+router.get('/by-tag', async (req, res) => {
+  try {
+    const tag = await findTag(req.query.tag);
+
+    if (!tag) res.status(404).send(JSON.stringify({"message" : "Category not found"}));
+
+    const meds = await Medicine.find({'tag' : tag});
+
+    return meds;
+  }
+  catch (error) {
+    res.status(500).send(JSON.stringify({"message" : `Error Getting Medicine by tag: ${error}`}));
+  }
+});
+
+
+/** search meds by keyword **/
+router.get('/search', async (req, res) => {
+  try {
+    console.log("Searching Meds")
+    // search in name
+    let meds = await Medicine.find(
+      {"name" : { $regex: req.query.q, $options: "i"}}
+    );
+
+    // search in description
+    meds.push(await Medicine.find(
+      {"description" : { $regex: req.query.q, $options: "i"}}
+    ));
+
+    res.status(200).send(meds);
+  }
+  catch (error) {
+    console.log(`Error Searching Mes : ${error}`);
+    res.status(500).send(JSON.stringify({"message" : `Error Searching Medicine: ${error}`}));
   }
 });
 
@@ -94,29 +134,12 @@ router.get('/:id', async (req, res) => {
     const med = await Medicine.findById (req.params.id);
     // console.log('expiry', med)
     if (!med)
-      return res.status(404).send('Med(s) Not Found!');
+      return res.status(404).send(JSON.stringify({"message" : "Med(s) not found"}));
 
     res.send(med);
   }
   catch (error) {
-    res.status(500).send(`Error Getting Meds By ID: ${error}`);
-  }
-});
-
-
-/** get meds by tag name**/
-router.get('/by-tag', async (req, res) => {
-  try {
-    const tag = await findTag(req.query.tag);
-
-    if (!tag) res.status(404).send("Tag(s) not found!");
-
-    const meds = await Medicine.find({'tag' : tag});
-
-    return meds;
-  }
-  catch (error) {
-    res.status(500).send(`Error: Reteriving Meds By Tags: ${error}`);
+    res.status(500).send(JSON.stringify({"message" : `Error Getting Medicine by Id: ${error}`}));
   }
 });
 
@@ -127,7 +150,7 @@ router.put('/:id', async (req, res) => {
     const tag = await findTag(req.body.tag);
 
     if (!tag)
-      return res.status(404).send("Tag not found!");
+      return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
 
     // const filter = { id: req.params.id };
     const update = Object.assign(req.body, { updated : new Date() });
@@ -138,13 +161,13 @@ router.put('/:id', async (req, res) => {
     );
 
     if (!updatedMedicine)
-      return res.status(404).send("Medicine not found");
+      return res.status(404).send(JSON.stringify({"message" : "Med not found"}));
 
     res.status(200).send(updatedMedicine);
   }
   catch (error) {
     console.error(error);
-    res.status(500).send(`Error Editing Medicine: ${error}`);
+    res.status(500).send(JSON.stringify({"message" : `Error Editting Medicine: ${error}`}));
   }
 });
 
@@ -152,16 +175,17 @@ router.put('/:id', async (req, res) => {
 /** delete medicine **/
 router.delete('/:id', async (req, res) => {
   try {
+    console.log("Searching Meds")
     const deletedMed = await Medicine.findByIdAndRemove(req.params.id);
 
     if (!deletedMed)
-      return rs.status(404).send("Med not found");
+      return rs.status(404).send(JSON.stringify({"message" : "Med not found"}));
 
     res.send(deletedMed);
   }
   catch (error) {
     process.stderr.write('{"status" : "error", "message" : "error deleting medicine"}');
-    res.status(500).send(`Error Deletion Medicine: ${error}`);
+    res.status(500).send(JSON.stringify({"message" : `Error Deletion Medicine: ${error}`}));
   }
 });
 
