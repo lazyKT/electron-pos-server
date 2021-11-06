@@ -119,7 +119,7 @@ function validateLogin (username, password, callback) {
             callback({status: 200, message: "success"});
 
           else
-            callback({status: 401, message: "failed"});
+            callback({status: 401, message: "invalid username/password"});
         })
       }
     });

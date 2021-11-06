@@ -9,7 +9,9 @@ const { Tag } = require("../schemas/tag");
 
 const findTag = async name => {
   try {
-    const tag = await Tag.findOne({'name' : name});
+    const tag = await Tag.findOne({
+      'name' : { $regex: name, $options: "i"}
+    });
 
     return tag;
   }
@@ -127,13 +129,28 @@ router.get('/by-tag', async (req, res) => {
   try {
     const tag = await findTag(req.query.tag);
 
-    if (!tag) res.status(404).send(JSON.stringify({"message" : "Category not found"}));
+    if (!tag)
+      return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
 
-    const meds = await Medicine.find({'tag' : tag});
+    if (req.query.q) {
+      const meds = await Medicine.find(
+        {
+          "tag" : {$regex: req.query.tag, $options: "i"},
+          "name" : {$regex: req.query.q, $options: "i"}
+        }
+      );
 
-    return meds;
+      return res.status(200).send(meds);
+    }
+
+    const meds = await Medicine.find(
+      {"tag" : {$regex: req.query.tag, $options: "i"}}
+    );
+
+    res.status(200).send(meds);
   }
   catch (error) {
+    console.error(error);
     res.status(500).send(JSON.stringify({"message" : `Error Getting Medicine by tag: ${error}`}));
   }
 });
@@ -142,16 +159,28 @@ router.get('/by-tag', async (req, res) => {
 /** search meds by keyword **/
 router.get('/search', async (req, res) => {
   try {
-    console.log("Searching Meds")
-    // search in name
-    let meds = await Medicine.find(
-      {"name" : { $regex: req.query.q, $options: "i"}}
-    );
+    let meds;
+    let searchArea = "name";
 
-    // search in description
-    meds.push(await Medicine.find(
-      {"description" : { $regex: req.query.q, $options: "i"}}
-    ));
+    if (req.query.area)
+      searchArea = req.query.area;
+
+    if (searchArea === "name")
+      meds = await Medicine.find(
+        {"name" : { $regex: req.query.q, $options: "i"}}
+      );
+    else if (searchArea === "tag")
+      meds = await Medicine.find(
+        {"tag" : { $regex: req.query.q, $options: "i"}}
+      );
+    else if (searchArea === "description")
+      meds = await Medicine.find(
+        {"description" : { $regex: req.query.q, $options: "i"}}
+      );
+    else
+      return res.status(400).send(JSON.stringify({
+        "message" : `Invalid Search Field ${req.query.area}`
+      }));
 
     res.status(200).send(meds);
   }
@@ -210,7 +239,7 @@ router.put('/:id', async (req, res) => {
 /** delete medicine **/
 router.delete('/:id', async (req, res) => {
   try {
-    console.log("Searching Meds")
+    // console.log("Searching Meds")
     const deletedMed = await Medicine.findByIdAndRemove(req.params.id);
 
     if (!deletedMed)

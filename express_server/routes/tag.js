@@ -33,7 +33,9 @@ router.get("/", async (req, res) => {
     null,
     null,
     { skip: page * limit, limit}
-  ).sort(sortObj);
+  )
+  .collation({ locale: "en" })
+  .sort(sortObj);
 
   res.send(tags);
 });
@@ -60,7 +62,21 @@ router.post("/", async (req, res) => {
     res.send(newTag);
   }
   catch (error) {
-    res.status(500).send(`Error Creating Tag: ${error}`);
+    res.status(500).send(JSON.stringify({"message" : `Error Creating Tag: ${error}`}));
+  }
+});
+
+
+router.get("/search", async (req, res) => {
+  try {
+    let tags = await Tag.find(
+      {"name" : {$regex: req.query.q, $options: "i"}}
+    );
+
+    res.status(200).send(tags);
+  }
+  catch  (error) {
+    res.status(500).send(JSON.stringify({"message" : `Error Searching Tag: ${error}`}));
   }
 });
 

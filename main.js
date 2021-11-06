@@ -3,7 +3,7 @@ electron app
 **/
 
 const path = require("path");
-const { fork } = require("child_process");
+const { fork, spawn } = require("child_process");
 const {
   app,
   BrowserWindow,
@@ -100,8 +100,16 @@ function createMainWindow () {
     // stop server
     ipcMain.on("stop-server", (event, args) => {
       // console.log("stop-server ipc received.")
-      if (server)
-        server.kill('SIGTERM'); // stop server process
+      if (server) {
+        if (process.platform === 'win32') {
+          // kill node process on windows
+          spawn ("taskkill", ["/pid", server.pid, "/f", "/t"]);
+        }
+        else {
+          server.kill('SIGINT'); // kill server process once the app is closed
+        }
+        server = null;
+      }
     });
 
   });
@@ -116,7 +124,7 @@ app.whenReady().then(() => {
   server = fork(
     path.join(__dirname, ("./server.js")),
     [],
-    { silent: true }
+    // { silent: true }
   );
 
   app.on("activate", () => {
@@ -130,9 +138,15 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
-    console.log("all window close")
     if (server) {
-      server.kill('SIGINT'); // kill server process once the app is closed
+      if (process.platform === 'win32') {
+        // kill node process on windows
+        spawn ("taskkill", ["/pid", server.pid, "/f", "/t"]);
+      }
+      else {
+        server.kill('SIGINT'); // kill server process once the app is closed
+      }
+      server = null;
     }
   }
 });

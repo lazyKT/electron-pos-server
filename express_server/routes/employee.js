@@ -68,16 +68,21 @@ router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    const emp = await Employee.findOne({"username" : username});
+
+    if (!emp)
+      return res.status(400).send(JSON.stringify({"message" : "invalid username/password"}));
+
     validateLogin(username, password, function(result) {
       const { status, message } = result;
 
       if (status === 404)
-        return res.status(404).send(message);
+        return res.status(404).send(JSON.stringify({"message" : message}));
 
       if (status === 401)
-        return res.status(403).send(message);
+        return res.status(403).send(JSON.stringify({"message" : message}));
 
-      res.status(200).send(message);
+      res.status(200).send(JSON.stringify({"message" : message}));
     });
 
     // const loginResult = await validateLogin(username, password);
@@ -103,6 +108,42 @@ router.get("/search", async (req, res) => {
   }
   catch (error) {
     res.status(500).send(`Error Seraching Employee Data: ${error}`);
+  }
+});
+
+
+/** get employee by id **/
+router.get("/:id", async(req, res) => {
+  try {
+    const emp = await Employee.findById(req.params.id);
+
+    if (!emp)
+      return res.status(404).send(JSON.stringify({"message" : "Employee Not Found!"}));
+
+    res.status(200).send(emp);
+  }
+  catch (error) {
+    res.status(500).send(JSON.stringify({"message" : "Server Error on Getting Employee By Id."}))
+  }
+});
+
+
+/** edit employee **/
+router.put("/:id", async (req, res) => {
+  try {
+    const emp = await Employee.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new : true }
+    );
+
+    if (!emp)
+      return res.status(404).send(JSON.stringify({"message" : "Employee Not Found"}));
+
+    res.status(201).send(emp);
+  }
+  catch (error) {
+    res.status(500).send(JSON.stringify({"message" : "Server Error on Editing Employee"}));
   }
 });
 
