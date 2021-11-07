@@ -23,16 +23,6 @@ const findTag = async name => {
 
 router.get('/', async (req, res) => {
   try {
-    if(req.query.tag) {
-
-      const tag = await findTag(req.query.tag);
-
-      if (!tag) return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
-
-      const meds = await Medicine.find({'tag': tag.name});
-
-      return res.send(meds);
-    }
 
     let page = 0;
     let limit = 10;
@@ -53,6 +43,24 @@ router.get('/', async (req, res) => {
       sort = req.query.sort;
 
     sortObj[sort] = order;
+
+    if(req.query.tag) {
+
+      const tag = await findTag(req.query.tag);
+
+      if (!tag) return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
+
+      const meds = await Medicine.find(
+        {'tag': tag.name},
+        null,
+        {
+          skip: page * limit,
+          limit
+        }
+      ).sort(sortObj);
+
+      return res.send(meds);
+    }
 
     const meds = await Medicine.find(
       {},
@@ -107,6 +115,63 @@ router.post('/', async (req, res) => {
   }
   catch (error) {
     res.status(500).send(JSON.stringify({"message" : `Error Adding Medicine: ${error}`}));
+  }
+});
+
+
+/**
+# Export Med Data by date and name
+**/
+router.get("/export", async (req, res) => {
+  try {
+
+    let qTag = "";
+    let qName = "";
+    let meds;
+
+    if (req.query.tag)
+      qTag = req.query.tag;
+
+    if (req.query.name)
+      qName = req.query.name
+
+    if (req.query.d1 && req.query.d2) {
+      meds = await Medicine.find({
+        "created" : {
+          $gte: new Date(req.query.d1),
+          $lt: new Date(req.query.d2)
+        },
+        $and : [
+          {"name" : {
+            $regex: qName,
+            $options: "i"
+          }},
+          {"tag" : {
+            $regex: qTag,
+            $options: "i"
+          }},
+          {"description" : {
+            $regex: qName,
+            $options: "i"
+          }}
+        ]
+      });
+    }
+    else {
+      meds = await Medicine.find({
+        $and : [
+          {"name" : { $regex : qName, $options: "i" }},
+          {"tag" : { $regex : qTag, $options: "i" }},
+          {"description" : { $regex : qName, $options: "i" }}
+        ]
+      });
+    }
+
+    res.status(200).send(meds);
+  }
+  catch (error) {
+    console.log(error);
+    res.status(500).send(JSON.stringify({"message" : "Error exporting medicines. 500"}));
   }
 });
 
