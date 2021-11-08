@@ -8,7 +8,8 @@ const tagSchema = new mongoose.Schema ({
     type: String,
     required: true,
     minLength: 4,
-    maxLength: 64
+    maxLength: 64,
+    index: { unique: true }
   },
   lowQtyAlert: {
     type: Number,
@@ -37,7 +38,7 @@ function validateTag (tag) {
   const schema = Joi.object({
     name: Joi.string().required(),
     lowQtyAlert: Joi.number().integer().min(5).required(),
-    expiryDateAlert: Joi.number().integer().min(30).required(),
+    expiryDateAlert: Joi.number().integer().min(120).required(),
     location: Joi.string()
   });
 

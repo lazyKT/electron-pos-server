@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const Lodash = require("lodash");
+
 const {
   Employee,
   validateEmployee,
@@ -27,7 +29,9 @@ router.get("/", async (req, res) => {
       { page: limit * page, limit }
     );
 
-    res.status(200).send(employees);
+    let emps = employees.map( e => e=Lodash.pick(e, ["_id", "username", "mobile", "level"]));
+
+    res.status(200).send(emps);
   }
   catch (error) {
     res.status(500).send(`Error getting employees: ${error}`);
@@ -40,7 +44,7 @@ router.post("/", async (req, res) => {
   try {
     const { error } = validateEmployee(req.body);
     if (error)
-      return res.status(400).send(error.details[0].message);
+      return res.status(400).send(JSON.stringify({"message": error.details[0].message}));
 
     const existingEmp = await Employee.findOne({"username" : req.body.username});
     if (existingEmp)
@@ -55,10 +59,10 @@ router.post("/", async (req, res) => {
 
     emp = await emp.save();
 
-    res.status(201).send(emp);
+    res.status(201).send(Lodash.pick(emp, ["username", "level", "mobile", "_id"]));
   }
   catch (error) {
-    res.status(500).send(`Error Creating New Employee: ${error}`);
+    res.status(500).send(JSON.stringify({"message" : `Error Creating New Employee: ${error}`}));
   }
 });
 
@@ -88,7 +92,7 @@ router.post("/login", async (req, res) => {
     // const loginResult = await validateLogin(username, password);
   }
   catch (error) {
-    res.status(500).send(`Error Login Employee: ${error}`);
+    res.status(500).send(JSON.stringify({"message" : `Error Login Employee: ${error}`}));
   }
 });
 
@@ -107,7 +111,7 @@ router.get("/search", async (req, res) => {
 
   }
   catch (error) {
-    res.status(500).send(`Error Seraching Employee Data: ${error}`);
+    res.status(500).send(JSON.stringify({"message" : `Error Searching Employee. ${error}`}));
   }
 });
 
@@ -120,7 +124,7 @@ router.get("/:id", async(req, res) => {
     if (!emp)
       return res.status(404).send(JSON.stringify({"message" : "Employee Not Found!"}));
 
-    res.status(200).send(emp);
+    res.status(201).send(Lodash.pick(emp, ["_id", "username", "mobile", "level"]));
   }
   catch (error) {
     res.status(500).send(JSON.stringify({"message" : "Server Error on Getting Employee By Id."}))
@@ -140,7 +144,7 @@ router.put("/:id", async (req, res) => {
     if (!emp)
       return res.status(404).send(JSON.stringify({"message" : "Employee Not Found"}));
 
-    res.status(201).send(emp);
+    res.status(201).send(Lodash.pick(emp, ["_id", "username", "mobile", "level"]));
   }
   catch (error) {
     res.status(500).send(JSON.stringify({"message" : "Server Error on Editing Employee"}));

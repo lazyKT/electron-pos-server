@@ -50,7 +50,12 @@ router.post("/", async (req, res) => {
     if (error)
       return res.status(400).send(JSON.stringify({"message" : `${error.details[0].message}`}));
 
-    let newTag = new Tag({
+    let newTag = await Tag.findOne({ "name" : req.body.name});
+
+    if (newTag)
+      return res.status(400).send(JSON.stringify({"message" : "category already exists."}));
+
+    newTag = new Tag({
       name: req.body.name,
       lowQtyAlert: req.body.lowQtyAlert,
       expiryDateAlert: req.body.expiryDateAlert,

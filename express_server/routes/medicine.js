@@ -91,27 +91,33 @@ router.post('/', async (req, res) => {
     if (!tag)
       return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
 
-    const filter = { productNumber: req.body.productNumber, expiry: new Date(req.body.expiry).toISOString()};
-    const update = {
+
+    const med = await Medicine.findOne({
+      "productNumber" : (req.body.productNumber).toLowerCase()
+    });
+
+    if (med)
+      return res.status(400).send(JSON.stringify(
+        {"message" : `Medicine already exists with product number: ${req.body.productNumber}`}
+      ));
+
+
+
+
+    let newMed = new Medicine({
       qty: req.body.qty,
       tag: req.body.tag,
       name: req.body.name,
-      productNumber: req.body.productNumber,
+      productNumber: (req.body.productNumber).toLowerCase(),
       description: req.body.description,
       price: req.body.price,
       approve: req.body.approve,
-    };
+      expiry: new Date(req.body.expiry)
+    });
 
-    const med = await Medicine.findOneAndUpdate(
-      filter,
-      update,
-      {
-        new: true,
-        upsert: true
-      }
-    );
+    newMed = await newMed.save();
 
-    res.status(201).send(med);
+    res.status(201).send(newMed);
   }
   catch (error) {
     res.status(500).send(JSON.stringify({"message" : `Error Adding Medicine: ${error}`}));
@@ -242,6 +248,10 @@ router.get('/search', async (req, res) => {
       meds = await Medicine.find(
         {"description" : { $regex: req.query.q, $options: "i"}}
       );
+    else if (searchArea === "productNumber")
+      meds = await Medicine.find(
+        {"productNumber" : { $regex: req.query.q, $options: "i"}}
+      );
     else
       return res.status(400).send(JSON.stringify({
         "message" : `Invalid Search Field ${req.query.area}`
@@ -250,7 +260,7 @@ router.get('/search', async (req, res) => {
     res.status(200).send(meds);
   }
   catch (error) {
-    console.log(`Error Searching Mes : ${error}`);
+    // console.log(`Error Searching Mes : ${error}`);
     res.status(500).send(JSON.stringify({"message" : `Error Searching Medicine: ${error}`}));
   }
 });
@@ -313,7 +323,7 @@ router.delete('/:id', async (req, res) => {
     res.send(deletedMed);
   }
   catch (error) {
-    process.stderr.write('{"status" : "error", "message" : "error deleting medicine"}');
+    // process.stderr.write('{"status" : "error", "message" : "error deleting medicine"}');
     res.status(500).send(JSON.stringify({"message" : `Error Deletion Medicine: ${error}`}));
   }
 });
