@@ -62,7 +62,7 @@ function validateMeds (med) {
     productNumber: Joi.string().required(),
     tag: Joi.string().required(),
     price: Joi.number().required(),
-    description: Joi.string().required(),
+    description: Joi.string(),
     qty: Joi.number().integer().min(0).required()
   });
 

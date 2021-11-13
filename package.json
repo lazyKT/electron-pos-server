@@ -1,6 +1,6 @@
 {
-  "name": "ces-server",
-  "version": "0.1.0",
+  "name": "CES Server",
+  "version": "0.1.1",
   "description": "",
   "main": "main.js",
   "scripts": {

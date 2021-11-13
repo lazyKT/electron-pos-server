@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const Lodash = require("lodash");
+
 
 const { Medicine, validateMeds } = require("../schemas/medicine");
 const { Tag } = require("../schemas/tag");
@@ -17,6 +19,18 @@ const findTag = async name => {
   }
   catch (error) {
     console.log("Error Finding Tag by name", error);
+  }
+}
+
+
+const findTagById = async id => {
+  try {
+    const tag = await Tag.findById(id);
+
+    return tag;
+  }
+  catch (error) {
+    console.error ("Error Finding Tag by Id", error);
   }
 }
 
@@ -101,12 +115,11 @@ router.post('/', async (req, res) => {
         {"message" : `Medicine already exists with product number: ${req.body.productNumber}`}
       ));
 
-
-
+    console.log("tag id", tag._id)
 
     let newMed = new Medicine({
       qty: req.body.qty,
-      tag: req.body.tag,
+      tag: tag._id,
       name: req.body.name,
       productNumber: (req.body.productNumber).toLowerCase(),
       description: req.body.description,
@@ -198,24 +211,13 @@ router.get('/count', async (req, res) => {
 /** get meds by tag name**/
 router.get('/by-tag', async (req, res) => {
   try {
-    const tag = await findTag(req.query.tag);
+    const tag = await findTagById(req.query.tag);
 
     if (!tag)
       return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
 
-    if (req.query.q) {
-      const meds = await Medicine.find(
-        {
-          "tag" : {$regex: req.query.tag, $options: "i"},
-          "name" : {$regex: req.query.q, $options: "i"}
-        }
-      );
-
-      return res.status(200).send(meds);
-    }
-
     const meds = await Medicine.find(
-      {"tag" : {$regex: req.query.tag, $options: "i"}}
+      {"tag" : {$regex: tag._id, $options: "i"}}
     );
 
     res.status(200).send(meds);
@@ -275,7 +277,15 @@ router.get('/:id', async (req, res) => {
     if (!med)
       return res.status(404).send(JSON.stringify({"message" : "Med(s) not found"}));
 
-    res.send(med);
+
+    const tag = await findTagById(med.tag);
+
+    if (!tag)
+      return res.status(400).send(JSON.stringify({"message" : "Invalid Category!"}));
+
+    const data = Object.assign(med, {category: tag.name})
+
+    res.send(data);
   }
   catch (error) {
     res.status(500).send(JSON.stringify({"message" : `Error Getting Medicine by Id: ${error}`}));
@@ -286,7 +296,7 @@ router.get('/:id', async (req, res) => {
 /** edit medicine */
 router.put('/:id', async (req, res) => {
   try {
-    const tag = await findTag(req.body.tag);
+    const tag = await findTagById(req.body.tag);
 
     if (!tag)
       return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
