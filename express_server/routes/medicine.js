@@ -285,11 +285,22 @@ router.get('/by-tag', async (req, res) => {
     if (!tag)
       return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
 
-    const meds = await Medicine.find(
+    Medicine.find(
       {"tag" : {$regex: tag._id, $options: "i"}}
-    );
+    ).lean() // to convert the mongoose object to plain js object, and allow mutation
+      .then (function (err, meds) {
+        if (err)
+          throw err;
 
-    res.status(200).send(meds);
+        Promise.all(meds.map(async med => {
+          const tag = await Tag.findById(med.tag);
+          med.category = tag.name;
+          return med;
+        }))
+          .then (meds => {
+            return res.status(200).send(meds);
+          });
+      });
   }
   catch (error) {
     console.error(error);
@@ -303,45 +314,53 @@ router.get('/search', async (req, res) => {
   try {
     let meds;
     let searchArea = "name";
+    let filter = []
 
     if (req.query.area)
       searchArea = req.query.area;
 
     if (searchArea === "name")
-      meds = await Medicine.find(
-        {"name" : { $regex: req.query.q, $options: "i"}}
-      );
+      filter.push({"name" : { $regex: req.query.q, $options: "i"}});
     else if (searchArea === "tag")
-      meds = await Medicine.find(
-        {"tag" : { $regex: req.query.q, $options: "i"}}
-      );
+      filter.push({"tag" : { $regex: req.query.q, $options: "i"}});
     else if (searchArea === "description")
-      meds = await Medicine.find(
-        {"description" : { $regex: req.query.q, $options: "i"}}
-      );
+      filter.push({"description" : { $regex: req.query.q, $options: "i"}});
     else if (searchArea === "productNumber")
-      meds = await Medicine.find(
-        {"productNumber" : { $regex: req.query.q, $options: "i"}}
-      );
+      filter.push({"productNumber" : { $regex: req.query.q, $options: "i"}});
     else
       return res.status(400).send(JSON.stringify({
         "message" : `Invalid Search Field ${req.query.area}`
       }));
 
-    res.status(200).send(meds);
+    Medicine.find({
+      $and: [...filter]
+    }).lean() // lean() is to convert mongoose objects to plain javascript objects, the motive is to allow mutation
+      .then (function (meds) {
+        if (!meds)
+          throw new Error("Meds Not Found!");
+
+        // here I used promise.all to resolve the async call for every elements inside meds array
+        Promise.all(meds.map(async med => {
+          const tag = await Tag.findById(med.tag);
+          med.category = tag.name;
+          return med;
+        }))
+          .then(meds => {
+            return res.status(200).send(meds);
+          });
+      });
   }
   catch (error) {
-    // console.log(`Error Searching Mes : ${error}`);
+    console.log(`Error Searching Mes : ${error}`);
     res.status(500).send(JSON.stringify({"message" : `Error Searching Medicine: ${error}`}));
   }
 });
 
 
-
 /** get meds by id */
 router.get('/:id', async (req, res) => {
   try {
-    const med = await Medicine.findById (req.params.id);
+    const med = await Medicine.findById (req.params.id).lean();
     // console.log('expiry', med)
     if (!med)
       return res.status(404).send(JSON.stringify({"message" : "Med(s) not found"}));
@@ -352,7 +371,7 @@ router.get('/:id', async (req, res) => {
     if (!tag)
       return res.status(400).send(JSON.stringify({"message" : "Invalid Category!"}));
 
-    const data = Object.assign(med, {category: tag.name})
+    const data = Object.assign(med, {category: tag.name});
 
     res.send(data);
   }
@@ -376,10 +395,13 @@ router.put('/:id', async (req, res) => {
       req.params.id,
       update,
       { new: true }
-    );
+    ).lean();
 
     if (!updatedMedicine)
       return res.status(404).send(JSON.stringify({"message" : "Med not found"}));
+
+
+    updatedMedicine = Object.assign(updatedMedicine, {category: tag.name})
 
     res.status(200).send(updatedMedicine);
   }
