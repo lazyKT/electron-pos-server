@@ -8,6 +8,11 @@ const { Medicine, validateMeds } = require("../schemas/medicine");
 const { Tag } = require("../schemas/tag");
 
 
+const {
+  validateMedCheckOut
+} = require("../validateRequest.js");
+
+
 
 const findTag = async name => {
   try {
@@ -136,6 +141,70 @@ router.post('/', async (req, res) => {
     res.status(500).send(JSON.stringify({"message" : `Error Adding Medicine: ${error}`}));
   }
 });
+
+
+/**
+# Search Medicine by Product Number
+**/
+router.get("/exact-search", async (req, res) => {
+  try {
+    if (!(req.query.productNumber))
+      return res.status(400).send(JSON.stringify({"message" : "Bad Request"}));
+
+    const med = await Medicine.findOne({"productNumber": req.query.productNumber});
+
+    if (!med)
+      return res.status(404).send(JSON.stringify({"messge" : "Medicine Not Found"}));
+
+    res.status(200).send(med);
+  }
+  catch (error) {
+    res.status(500).send(JSON.stringify({"message" : "Internal Server Error!"}));
+  }
+});
+
+
+
+/**
+# Reduct quantity after checkout
+**/
+router.put("/checkout", async (req, res) => {
+  try {
+
+    const { error , message } = validateMedCheckOut(req.body);
+
+    if (error)
+      return res.status(400).send(JSON.stringify({"message" : message}));
+
+    const { tagId, medId, qty } = req.body;
+
+    const med = await Medicine.findById(medId);
+    if (!med)
+      return res.status(400).send(JSON.stringify({"message" : "Medicine Not Found!"}));
+
+    if (parseInt(med.qty) < parseInt(qty))
+      return res.status(400).send(JSON.stringify({"message" : "Not enough item(s) remainning!"}));
+
+    const tag = await Tag.findById(tagId);
+    if (!tag)
+      return res.status(400).send(JSON.stringify({"message" : "Category Not Found!"}));
+
+    const update = {"qty" : parseInt(med.qty) - parseInt(qty)};
+
+    let updatedMedicine = await Medicine.findByIdAndUpdate(
+      medId,
+      update,
+      { new : true }
+    );
+
+    res.status(201).send(updatedMedicine);
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).send(JSON.stringify({"message" : "Internal Server Error!"}));
+  }
+});
+
 
 
 /**
