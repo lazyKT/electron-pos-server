@@ -6,8 +6,10 @@ const Lodash = require("lodash");
 const {
   Employee,
   validateEmployee,
+  validateEmployeeEditRequest,
   validateLogin
 } = require("../schemas/employee");
+
 
 
 /** Get all employee **/
@@ -27,9 +29,9 @@ router.get("/", async (req, res) => {
       null,
       null,
       { page: limit * page, limit }
-    );
+    ).sort({username: 1});
 
-    let emps = employees.map( e => e=Lodash.pick(e, ["_id", "username", "mobile", "level"]));
+    let emps = employees.map( e => e=Lodash.pick(e, ["_id", "username", "fullName", "mobile", "level"]));
 
     res.status(200).send(emps);
   }
@@ -53,6 +55,7 @@ router.post("/", async (req, res) => {
     let emp = new Employee({
       username: req.body.username,
       level: req.body.level,
+      fullName: req.body.fullName,
       mobile: req.body.mobile,
       password: req.body.password
     });
@@ -78,7 +81,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).send(JSON.stringify({"message" : "invalid username/password"}));
 
     validateLogin(username, password, function(result) {
-      const { status, message } = result;
+      const { status, message, emp } = result;
 
       if (status === 404)
         return res.status(404).send(JSON.stringify({"message" : message}));
@@ -86,7 +89,9 @@ router.post("/login", async (req, res) => {
       if (status === 401)
         return res.status(403).send(JSON.stringify({"message" : message}));
 
-      res.status(200).send(JSON.stringify({"message" : message}));
+      let empData = Lodash.pick(emp, ["_id", "username", "mobile", "level", "fullName"]);
+
+      res.status(200).send(empData);
     });
 
     // const loginResult = await validateLogin(username, password);
@@ -103,9 +108,11 @@ router.get("/search", async (req, res) => {
   try {
 
     // find by username
-    const emps = await Employee.find(
+    let emps = await Employee.find(
       {"username" : {$regex: req.query.q, $options: "i"}}
     );
+
+    emps = emps.map(emp => Lodash.pick(emp, ["_id", "username", "fullName", "mobile", "level"]));
 
     res.status(200).send(emps);
 
@@ -124,7 +131,7 @@ router.get("/:id", async(req, res) => {
     if (!emp)
       return res.status(404).send(JSON.stringify({"message" : "Employee Not Found!"}));
 
-    res.status(201).send(Lodash.pick(emp, ["_id", "username", "mobile", "level"]));
+    res.status(201).send(Lodash.pick(emp, ["_id", "username", "mobile", "level", "fullName"]));
   }
   catch (error) {
     res.status(500).send(JSON.stringify({"message" : "Server Error on Getting Employee By Id."}))
@@ -135,6 +142,11 @@ router.get("/:id", async(req, res) => {
 /** edit employee **/
 router.put("/:id", async (req, res) => {
   try {
+
+    const { error, message } = validateEmployeeEditRequest(req.body);
+    if (error)
+      return res.status(400).send(JSON.stringify({"message" : message}));
+
     const emp = await Employee.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -144,10 +156,27 @@ router.put("/:id", async (req, res) => {
     if (!emp)
       return res.status(404).send(JSON.stringify({"message" : "Employee Not Found"}));
 
-    res.status(201).send(Lodash.pick(emp, ["_id", "username", "mobile", "level"]));
+    res.status(201).send(Lodash.pick(emp, ["_id", "username", "fullName", "mobile", "level"]));
   }
   catch (error) {
     res.status(500).send(JSON.stringify({"message" : "Server Error on Editing Employee"}));
+  }
+});
+
+
+/** delete employee **/
+router.delete("/:id", async (req, res) => {
+  try {
+
+    const emp = await Employee.findByIdAndRemove(req.params.id);
+
+    if (!emp)
+      return res.status(400).send(JSON.stringify({"message" : "User Not Found!"}));
+
+    res.status(200).send(emp);
+  }
+  catch(error) {
+    res.status(500).send(JSON.stringify({"message" : "Internal Server Error"}));
   }
 });
 

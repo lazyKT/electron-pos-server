@@ -9,7 +9,8 @@ const { Tag } = require("../schemas/tag");
 
 
 const {
-  validateMedCheckOut
+  validateMedCheckOut,
+  validateMedCheckOutSearchQueries
 } = require("../validateRequest.js");
 
 
@@ -154,9 +155,50 @@ router.get("/exact-search", async (req, res) => {
     const med = await Medicine.findOne({"productNumber": req.query.productNumber});
 
     if (!med)
-      return res.status(404).send(JSON.stringify({"messge" : "Medicine Not Found"}));
+      return res.status(404).send(JSON.stringify({"message" : "Medicine Not Found"}));
 
     res.status(200).send(med);
+  }
+  catch (error) {
+    res.status(500).send(JSON.stringify({"message" : "Internal Server Error!"}));
+  }
+});
+
+
+/**
+# Medicine Search at checkout cashier
+**/
+router.get("/checkout", async (req, res) => {
+  try {
+
+    const { error, message } = validateMedCheckOutSearchQueries(req.query);
+
+    if (error)
+      return res.status(400).send(JSON.stringify({"message" : message}));
+
+    Medicine.find({
+      $or: [
+        {"name" : {$regex: req.query.q, $options: "i"}},
+        {"productNumber" : {$regex: req.query.q, $options: "i"}},
+        {"description" : {$regex: req.query.q, $options: "i"}}
+      ]
+    }).lean()
+      .then(function (meds) {
+        if (!meds)
+          throw new Error ("Error Searching Medicines");
+
+        Promise.all(meds.map( async med => {
+          const tag = await Tag.findById(med.tag);
+          med.category = tag.name;
+          med.location = tag.location;
+          return med;
+        }))
+          .then(function (meds) {
+            return res.status(200).send(meds);
+          });
+      })
+
+
   }
   catch (error) {
     res.status(500).send(JSON.stringify({"message" : "Internal Server Error!"}));
@@ -224,7 +266,7 @@ router.get("/export", async (req, res) => {
       qName = req.query.name
 
     if (req.query.d1 && req.query.d2) {
-      meds = await Medicine.find({
+      meds = Medicine.find({
         "created" : {
           $gte: new Date(req.query.d1),
           $lt: new Date(req.query.d2)
@@ -246,7 +288,7 @@ router.get("/export", async (req, res) => {
       });
     }
     else {
-      meds = await Medicine.find({
+      meds = Medicine.find({
         $and : [
           {"name" : { $regex : qName, $options: "i" }},
           {"tag" : { $regex : qTag, $options: "i" }},
@@ -255,11 +297,25 @@ router.get("/export", async (req, res) => {
       });
     }
 
-    res.status(200).send(meds);
+    meds.lean()
+      .then(function (meds) {
+        if(!meds)
+          throw new Error("Error Searching Meds");
+
+        Promise.all(meds.map( async med => {
+          const tag = await Tag.findById(med.tag);
+          med.category = tag.name;
+          med.location = tag.location;
+          return med;
+        }))
+          .then(function (meds) {
+            return res.status(200).send(meds);
+          })
+      });
   }
   catch (error) {
     console.log(error);
-    res.status(500).send(JSON.stringify({"message" : "Error exporting medicines. 500"}));
+    res.status(500).send(JSON.stringify({"message" : error.toString()}));
   }
 });
 
@@ -281,20 +337,30 @@ router.get('/count', async (req, res) => {
 router.get('/by-tag', async (req, res) => {
   try {
     const tag = await findTagById(req.query.tag);
+    let searchQuery = ""
 
     if (!tag)
       return res.status(404).send(JSON.stringify({"message" : "Category not found"}));
 
-    Medicine.find(
-      {"tag" : {$regex: tag._id, $options: "i"}}
-    ).lean() // to convert the mongoose object to plain js object, and allow mutation
-      .then (function (err, meds) {
-        if (err)
-          throw err;
+    if (req.query.q)
+      searchQuery = req.query.q;
+
+    Medicine.find({
+      "tag" : {$regex: tag._id, $options: "i"},
+      $or: [
+        {"productNumber" : {$regex: searchQuery, $options: "i"}},
+        {"name" : {$regex: searchQuery, $options: "i"}},
+        {"description" : {$regex: searchQuery, $options: "i"}}
+      ]
+    }).lean() // to convert the mongoose object to plain js object, and allow mutation
+      .then (function (meds) {
+        if (!meds)
+          throw new Error("Error Searching Meds by Category!");
 
         Promise.all(meds.map(async med => {
           const tag = await Tag.findById(med.tag);
           med.category = tag.name;
+          med.location = tag.location;
           return med;
         }))
           .then (meds => {
@@ -343,6 +409,7 @@ router.get('/search', async (req, res) => {
         Promise.all(meds.map(async med => {
           const tag = await Tag.findById(med.tag);
           med.category = tag.name;
+          med.location = tag.location;
           return med;
         }))
           .then(meds => {
@@ -371,7 +438,7 @@ router.get('/:id', async (req, res) => {
     if (!tag)
       return res.status(400).send(JSON.stringify({"message" : "Invalid Category!"}));
 
-    const data = Object.assign(med, {category: tag.name});
+    const data = Object.assign(med, {category: tag.name, location: tag.location});
 
     res.send(data);
   }
@@ -401,7 +468,7 @@ router.put('/:id', async (req, res) => {
       return res.status(404).send(JSON.stringify({"message" : "Med not found"}));
 
 
-    updatedMedicine = Object.assign(updatedMedicine, {category: tag.name})
+    updatedMedicine = Object.assign(updatedMedicine, {category: tag.name, location: tag.location})
 
     res.status(200).send(updatedMedicine);
   }
