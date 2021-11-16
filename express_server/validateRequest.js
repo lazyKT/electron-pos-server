@@ -11,3 +11,12 @@ exports.validateMedCheckOut = function (requestBody) {
 
   return {error: false}
 }
+
+
+exports.validateMedCheckOutSearchQueries = function (requestQuery) {
+
+  if (!requestQuery.q)
+    return {error: true, message: "Request Query 'q' is required at checkout search."};
+
+  return {error: false};
+}

@@ -13,6 +13,12 @@ const employeeSchema = new mongoose.Schema({
     required: true,
     index: { unique: true }
   },
+  fullName: {
+    type: String,
+    minLength: 5,
+    maxLength: 72,
+    required: true
+  },
   mobile: {
     type: String,
     minLength: 6,
@@ -34,6 +40,7 @@ function validateEmployee (emp) {
   const schema = Joi.object({
     username: Joi.string().required(),
     mobile: Joi.string().required(),
+    fullName: Joi.string().required(),
     level: Joi.number().integer().min(1).max(3).required(),
     password: Joi.string().required()
   });
@@ -110,13 +117,12 @@ function validateLogin (username, password, callback) {
         callback({status: 400, message: "bad request"});
 
       else if (emp) {
-
         emp.comparePassword(password, function (err, isMatch) {
           if (err)
             throw err;
 
           else if (isMatch)
-            callback({status: 200, message: "success"});
+            callback({status: 200, message: "success", emp});
 
           else
             callback({status: 401, message: "invalid username/password"});
@@ -130,9 +136,28 @@ function validateLogin (username, password, callback) {
 }
 
 
+function validateEmployeeEditRequest (requestBody) {
+  if (!requestBody.fullName)
+    return {error: true, message: "fullName is required"}
+
+  if (!requestBody.username)
+    return {error: true, message: "username is required"}
+
+  if (!requestBody.mobile)
+    return {error: true, message: "mobile is required"}
+
+  if (!requestBody.level)
+    return {error: true, message: "Account Level is required"}
+
+  return {error: false}
+}
+
+
 const Employee = new mongoose.model ("Employee", employeeSchema);
+
 
 
 exports.Employee = Employee;
 exports.validateEmployee = validateEmployee;
 exports.validateLogin = validateLogin;
+exports.validateEmployeeEditRequest = validateEmployeeEditRequest;
