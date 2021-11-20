@@ -31,6 +31,7 @@ const inventory = require("./express_server/routes/inventory");
 const medicine = require("./express_server/routes/medicine");
 const tag = require("./express_server/routes/tag");
 const employee = require("./express_server/routes/employee");
+const invoice = require("./express_server/routes/invoice");
 
 
 const app = express();
@@ -41,6 +42,7 @@ app.use("/api/inventory", inventory);
 app.use("/api/meds", medicine);
 app.use("/api/tags", tag);
 app.use("/api/employees", employee);
+app.use("/api/pharmacy/invoices", invoice);
 
 
 process.on("message", m => {
