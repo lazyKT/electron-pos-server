@@ -59,6 +59,7 @@ router.post("/", async (req, res) => {
         invoice = new PharmacyInvoice({
           invoiceNumber: req.body.invoiceNumber,
           employeeID: req.body.employeeID,
+          cashier: req.body.cashier,
           customerID: req.body.customerID,
           payableAmount: req.body.payableAmount,
           givenAmount: req.body.givenAmount,
@@ -71,12 +72,12 @@ router.post("/", async (req, res) => {
         return res.status(201).send(invoice);
       })
       .catch (error => {
-
-        return res.status(400).send(JSON.stringify({"message" : error.message }));
+        console.log(error);
+        return res.status(400).send(JSON.stringify({"message2" : error.message }));
       });
   }
   catch (error) {
-  
+
     res.status(500).send(JSON.stringify({"message" : "Internal Server Error"}));
   }
 });

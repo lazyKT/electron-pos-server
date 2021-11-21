@@ -155,7 +155,7 @@ router.get("/exact-search", async (req, res) => {
     const med = await Medicine.findOne({"productNumber": req.query.productNumber});
 
     if (!med)
-      return res.status(404).send(JSON.stringify({"message" : "Medicine Not Found"}));
+      return res.status(400).send(JSON.stringify({"message" : "Medicine Not Found"}));
 
     res.status(200).send(med);
   }
@@ -196,9 +196,7 @@ router.get("/checkout", async (req, res) => {
           .then(function (meds) {
             return res.status(200).send(meds);
           });
-      })
-
-
+      });
   }
   catch (error) {
     res.status(500).send(JSON.stringify({"message" : "Internal Server Error!"}));
@@ -212,7 +210,6 @@ router.get("/checkout", async (req, res) => {
 **/
 router.put("/checkout", async (req, res) => {
   try {
-
     const { error , message } = validateMedCheckOut(req.body);
 
     if (error)
@@ -225,7 +222,7 @@ router.put("/checkout", async (req, res) => {
       return res.status(400).send(JSON.stringify({"message" : "Medicine Not Found!"}));
 
     if (parseInt(med.qty) < parseInt(qty))
-      return res.status(400).send(JSON.stringify({"message" : "Not enough item(s) remainning!"}));
+      return res.status(400).send(JSON.stringify({"message" : `${med.name} : not enough remainning item(s)!`}));
 
     const tag = await Tag.findById(tagId);
     if (!tag)
@@ -347,7 +344,7 @@ router.get('/by-tag', async (req, res) => {
 
     Medicine.find({
       "tag" : {$regex: tag._id, $options: "i"},
-      $or: [
+      $and: [
         {"productNumber" : {$regex: searchQuery, $options: "i"}},
         {"name" : {$regex: searchQuery, $options: "i"}},
         {"description" : {$regex: searchQuery, $options: "i"}}
