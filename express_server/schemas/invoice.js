@@ -4,11 +4,19 @@ const Joi = require("joi")
 
 
 const cartItemSchema = new mongoose.Schema({
+  productId: {
+    type: String,
+    required: true
+  },
   productNumber: {
     type: String,
     required: true
   },
   productName: {
+    type: String,
+    required: true
+  },
+  tagId: {
     type: String,
     required: true
   },
@@ -54,6 +62,10 @@ const pharmacyInvoiceSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  cashier: {
+    type: String,
+    required: true
+  },
   customerID: {
     type: String,
     required: true
@@ -82,11 +94,14 @@ function validateInvoice (invoice) {
   const schema = Joi.object({
     invoiceNumber: Joi.string().min(14).required(),
     employeeID: Joi.string().required(),
+    cashier: Joi.string().required(),
     customerID: Joi.string().required(),
     payableAmount: Joi.number().required(),
     cartItems: Joi.array().items({
         productNumber: Joi.string().required(),
         productName: Joi.string().required(),
+        productId: Joi.string().required(),
+        tagId: Joi.string().required(),
         price: Joi.number().required(),
         qty: Joi.number().required(),
         totalPrice: Joi.number().required()
@@ -101,7 +116,7 @@ function validateInvoice (invoice) {
 
 
 
-const PharmacyInvoice = new mongoose.model ("Invoice", pharmacyInvoiceSchema);
+const PharmacyInvoice = new mongoose.model ("PharmacyInvoice", pharmacyInvoiceSchema);
 
 
 exports.PharmacyInvoice = PharmacyInvoice;
