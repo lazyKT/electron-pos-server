@@ -384,8 +384,6 @@ router.get('/search', async (req, res) => {
 
     if (searchArea === "name")
       filter.push({"name" : { $regex: req.query.q, $options: "i"}});
-    else if (searchArea === "tag")
-      filter.push({"tag" : { $regex: req.query.q, $options: "i"}});
     else if (searchArea === "description")
       filter.push({"description" : { $regex: req.query.q, $options: "i"}});
     else if (searchArea === "productNumber")
