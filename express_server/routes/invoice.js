@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 
-const { PharmacyInvoice, validateInvoice } = require("../schemas/invoice");
+const { PharmacyInvoice, validateInvoice } = require("../schemas/pharmacyInvoice");
 const { Medicine } = require("../schemas/medicine");
 const { Employee } = require("../schemas/employee");
 
