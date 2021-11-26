@@ -38,19 +38,6 @@ const cartItemSchema = new mongoose.Schema({
 });
 
 
-function validateCartItem (item) {
-  const schema = Joi.object({
-    productNumber: Joi.string().required(),
-    price: Joi.number().required(),
-    qty: Joi.number().required(),
-    totalPrice: Joi.number().required()
-  });
-
-  const validateResult = schema.validate(item);
-  return validateResult;
-}
-
-
 const pharmacyInvoiceSchema = new mongoose.Schema({
   invoiceNumber: {
     type: String,
@@ -121,4 +108,3 @@ const PharmacyInvoice = new mongoose.model ("PharmacyInvoice", pharmacyInvoiceSc
 
 exports.PharmacyInvoice = PharmacyInvoice;
 exports.validateInvoice = validateInvoice;
-exports.validateCartItem = validateCartItem;
