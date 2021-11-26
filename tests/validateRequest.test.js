@@ -115,7 +115,7 @@ describe ('Validate Query String for Medicine Search at Checkout', () => {
     );
   });
 
-  it ("Empty Query String", () => {
+  it ("Valid Query String", () => {
     const request = { q: 'panadol' }
     const result = validateRequest.validateMedCheckOutSearchQueries(request);
     expect(result.error).toEqual(false);
