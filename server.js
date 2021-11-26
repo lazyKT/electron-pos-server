@@ -31,7 +31,7 @@ const inventory = require("./express_server/routes/inventory");
 const medicine = require("./express_server/routes/medicine");
 const tag = require("./express_server/routes/tag");
 const employee = require("./express_server/routes/employee");
-const invoice = require("./express_server/routes/invoice");
+const invoice = require("./express_server/routes/pharmacyInvoice");
 
 
 const app = express();
