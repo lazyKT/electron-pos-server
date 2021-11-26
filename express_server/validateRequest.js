@@ -45,8 +45,8 @@ exports.validateMedCheckOutSearchQueries = function (requestQuery) {
   if (typeof(requestQuery.q) !== 'string' || requestQuery.q === null || requestQuery.q.length < 1)
     return {error: true, message: "Query String 'q' must be string and must not be null or empty."};
 
-  if ((requestQuery.q).contains('&') || (requestQuery.q).contains('?')
-          || (requestQuery.q).contains('=') || (requestQuery.q).contains('+') || (requestQuery.q).contains('-'))
+  if ((requestQuery.q).includes('&') || (requestQuery.q).includes('?')
+          || (requestQuery.q).includes('='))
     return {error: true, message: "Malformed Query String. Invalid Search Params!"}
 
   return {error: false};

@@ -5,7 +5,10 @@
 const validateRequest = require("../express_server/validateRequest.js");
 
 
-describe('Validate Medicine Checkout Request Body at Checkout', () => {
+/**
+# Validate Request Body For Medicine Checkout
+**/
+describe ('Validate Medicine Checkout Request Body at Checkout', () => {
 
   it ("Request Body Without tagId", () => {
     const body = {
@@ -76,6 +79,45 @@ describe('Validate Medicine Checkout Request Body at Checkout', () => {
       "qty" : 10
     };
     const result = validateRequest.validateMedCheckOut(body);
+    expect(result.error).toEqual(false);
+  });
+});
+
+
+/**
+# Validate Query String for Medicine Search at Checkout
+**/
+describe ('Validate Query String for Medicine Search at Checkout', () => {
+
+  it ("Undefined Query String", () => {
+    const request = {};
+    const result = validateRequest.validateMedCheckOutSearchQueries(request);
+    expect(result.error).toEqual(true);
+  });
+
+  it ("Empty Query String", () => {
+    const request = { q : ''};
+    const result = validateRequest.validateMedCheckOutSearchQueries(request);
+    expect(result.error).toEqual(true);
+  });
+
+  it ("Malformed/Invalid Query String", () => {
+    const requests = [
+      {q : 'panadol?'},
+      {q : 'panadol&'},
+      {q : 'panadol='}
+    ];
+    requests.forEach(
+      request => {
+        const result = validateRequest.validateMedCheckOutSearchQueries(request);
+        expect(result.error).toEqual(true);
+      }
+    );
+  });
+
+  it ("Empty Query String", () => {
+    const request = { q: 'panadol' }
+    const result = validateRequest.validateMedCheckOutSearchQueries(request);
     expect(result.error).toEqual(false);
   });
 });
