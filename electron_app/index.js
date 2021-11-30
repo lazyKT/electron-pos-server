@@ -144,7 +144,14 @@ function addLogs (log) {
     const date = (new Date()).toLocaleDateString();
     const time = (new Date()).toLocaleTimeString();
     logMessage.innerHTML = `${date} ${time}: ${log}`;
-
     logs.appendChild(logMessage);
+    logs.scrollTop = logs.scrollHeight; // scroll to bottom
   }
 }
+
+
+/**
+ * Clean Up Event Listeners 
+ **/
+
+window.onUnload = () => window.api.removeEventListeners();

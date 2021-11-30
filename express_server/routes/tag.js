@@ -4,6 +4,7 @@ const router = express.Router();
 
 const { Tag, validateTag } = require("../schemas/tag");
 const { Medicine } = require("../schemas/medicine");
+const { requestLogger } = require("../logger");
 
 
 /** get all tags */
@@ -37,6 +38,7 @@ router.get("/", async (req, res) => {
   .collation({ locale: "en" })
   .sort(sortObj);
 
+  requestLogger(`[GET] ${req.baseUrl} - 200`);
   res.send(tags);
 });
 
@@ -47,13 +49,17 @@ router.post("/", async (req, res) => {
   try {
 
     const { error } = validateTag(req.body);
-    if (error)
+    if (error) {
+      requestLogger(`[POST] ${req.baseUrl} - 400`);
       return res.status(400).send(JSON.stringify({"message" : `${error.details[0].message}`}));
+    }
 
     let newTag = await Tag.findOne({ "name" : req.body.name});
 
-    if (newTag)
+    if (newTag) {
+      requestLogger(`[POST] ${req.baseUrl} - 400`);
       return res.status(400).send(JSON.stringify({"message" : "category already exists."}));
+    }
 
     newTag = new Tag({
       name: req.body.name,
@@ -64,9 +70,11 @@ router.post("/", async (req, res) => {
 
     newTag = await newTag.save();
 
+    requestLogger(`[POST] ${req.baseUrl} - 200`);
     res.send(newTag);
   }
   catch (error) {
+    requestLogger(`[POST] ${req.baseUrl} - 500`);
     res.status(500).send(JSON.stringify({"message" : `Error Creating Tag: ${error}`}));
   }
 });
@@ -78,9 +86,11 @@ router.get("/search", async (req, res) => {
       {"name" : {$regex: req.query.q, $options: "i"}}
     );
 
+    requestLogger(`[GET] ${req.baseUrl}/search - 200`);
     res.status(200).send(tags);
   }
   catch  (error) {
+    requestLogger(`[GET] ${req.baseUrl}/search - 500`);
     res.status(500).send(JSON.stringify({"message" : `Error Searching Tag: ${error}`}));
   }
 });
@@ -91,9 +101,11 @@ router.get('/count', async (req, res) => {
   try {
     const tagCount = await Tag.count();
 
+    requestLogger(`[GET] ${req.baseUrl}/count - 200`);
     res.status(200).send(JSON.stringify({"count" : tagCount}));
   }
   catch (error) {
+    requestLogger(`[GET] ${req.baseUrl}/count - 500`);
     res.status(500).send(JSON.stringify({"message" : `Error Reteriving Tag Counts: ${error}`}));
   }
 });
@@ -104,11 +116,16 @@ router.get("/:id", async (req, res) => {
   try {
     const tag = await Tag.findById (req.params.id);
 
-    if (!tag) return res.status(404).send("Tag(s) not found!");
+    if (!tag) {
+      requestLogger(`[GET] ${req.baseUrl}/${req.params.id} - 400`);
+      return res.status(404).send("Tag(s) not found!");
+    }
 
+    requestLogger(`[GET] ${req.baseUrl}/${req.params.id} - 200`);
     res.send(tag);
   }
   catch (error) {
+    requestLogger(`[GET] ${req.baseUrl}/${req.params.id} - 500`);
     res.status(500).send(JSON.stringify({"message": `Error reteriving tag by id: ${error}`}));
   }
 });
@@ -125,12 +142,16 @@ router.put("/:id", async (req, res) => {
       { new : true }
     );
 
-    if (!updatedTag)
+    if (!updatedTag) {
+      requestLogger(`[PUT] ${req.baseUrl}/${req.params.id} - 404`);
       return res.status(404).send("Tag Not Found");
+    }
 
+    requestLogger(`[PUT] ${req.baseUrl}/${req.params.id} - 200`);
     res.send(updatedTag);
   }
   catch (error) {
+    requestLogger(`[PUT] ${req.baseUrl}/${req.params.id} - 500`);
     res.status(500).send(`Error Editing Tag: ${error}`);
   }
 });
@@ -146,8 +167,10 @@ router.delete("/:id", async (req, res) => {
   try {
     const deletedTag = await Tag.findByIdAndRemove(req.params.id);
 
-    if (!deletedTag)
+    if (!deletedTag) {
+      requestLogger(`[DELETE] ${req.baseUrl}/${req.params.id} - 404`);
       return res.status(404).send("Tag Not Found");
+    }
 
     const tagName = deletedTag.name;
 
@@ -157,9 +180,11 @@ router.delete("/:id", async (req, res) => {
       }
     );
 
+    requestLogger(`[DELETE] ${req.baseUrl}/${req.params.id} - 204`);
     res.status(204).end("");
   }
   catch (error) {
+    requestLogger(`[DELETE] ${req.baseUrl}/${req.params.id} - 500`);
     // process.stderror.write('{"status": "erorr", "message" : "error deleting tag"}');
     console.error(`Error Deleting Tag: ${error}`);
     res.status(500).send(`Error Deleting Tag: ${error}`);

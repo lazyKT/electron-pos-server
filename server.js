@@ -27,7 +27,6 @@ mongoose.connect(Config.dbURL)
 
 
 const home = require("./express_server/routes/home");
-const inventory = require("./express_server/routes/inventory");
 const medicine = require("./express_server/routes/medicine");
 const tag = require("./express_server/routes/tag");
 const employee = require("./express_server/routes/employee");
@@ -38,7 +37,6 @@ const app = express();
 
 app.use(express.json());
 app.use("/", home);
-app.use("/api/inventory", inventory);
 app.use("/api/meds", medicine);
 app.use("/api/tags", tag);
 app.use("/api/employees", employee);

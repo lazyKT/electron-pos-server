@@ -35,5 +35,21 @@ contextBridge.exposeInMainWorld ("api", {
     if (ALLOWED_RECEIVED_CHANNELS.includes(channel)) {
       ipcRenderer.on(channel, (event, ...args) => callback(...args));
     }
+  },
+  removeEventListeners: () => {
+    try {
+      ALLOWED_RECEIVED_CHANNELS.forEach(
+        channel => {
+          const func = ipcRenderer.listeners(channel)[0];
+          if (func) {
+            ipcRenderer.removeListener(channel, func);
+            console.log(`${channel} is removed from ipcRenderer!`);
+          }
+        }
+      );
+    }
+    catch (error) {
+      console.error("Error Removing Listeners From IPCRenderer", error);
+    }
   }
 })

@@ -184,7 +184,7 @@ router.get("/exact-search", async (req, res) => {
 
 
 /**
-# Medicine Search at checkout cashier
+# get medicine by product number at checkout cashier
 **/
 router.get("/checkout", async (req, res) => {
   try {
@@ -454,7 +454,7 @@ router.get('/search', async (req, res) => {
           return med;
         }))
           .then(meds => {
-            requestLogger(`[GET] ${req.baseUrl}/search - 400`);
+            requestLogger(`[GET] ${req.baseUrl}/search - 200`);
             return res.status(200).send(meds);
           });
       });
