@@ -1,6 +1,7 @@
 # electron-pos-server
 
 ### Express Local Server with Electron App
+#### Run/listen express server in child process and logging out the server logs inside electron browser window.
 
 ### How to run
 ```
