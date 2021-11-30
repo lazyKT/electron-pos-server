@@ -60,6 +60,11 @@ window.api.receive("database-status", status => {
 });
 
 
+window.api.receive("requests-logs", message => {
+  addLogs(`Api Request : ${message}`);
+});
+
+
 window.api.receive("logs", log => {
   console.log(log.toString());
   addLogs(log);
@@ -139,7 +144,14 @@ function addLogs (log) {
     const date = (new Date()).toLocaleDateString();
     const time = (new Date()).toLocaleTimeString();
     logMessage.innerHTML = `${date} ${time}: ${log}`;
-
     logs.appendChild(logMessage);
+    logs.scrollTop = logs.scrollHeight; // scroll to bottom
   }
 }
+
+
+/**
+ * Clean Up Event Listeners 
+ **/
+
+window.onUnload = () => window.api.removeEventListeners();

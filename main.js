@@ -38,7 +38,13 @@ function createMainWindow () {
 
   win.on("ready-to-show", () => win.show());
 
-  win.on("close", () => { if(win) win = null; });
+  win.on("close", () => { 
+    if(win) {
+      removeEventListeners(ipcMain, ["stop-server"]);
+      removeEventListeners(win.webContents, ["did-finish-load"]);
+      win = null; 
+    }
+  });
 
   win.webContents.on("did-finish-load", () => {
     /**
@@ -47,7 +53,7 @@ function createMainWindow () {
     **/
 
     server.on("message", m => {
-
+      console.log(m);
       if (m === "server-ready") {
         win.webContents.send("server-status", "connected");
       }
@@ -60,7 +66,7 @@ function createMainWindow () {
         win.webContents.send("server-socket-info", m.split(':')[1]);
       }
       else {
-        console.log(m);
+
         try {
           const messageObject = JSON.parse(m);
           const { name } = messageObject;
@@ -68,6 +74,10 @@ function createMainWindow () {
           if (name === "dbstatus") {
 
             win.webContents.send("database-status", messageObject.status);
+          }
+          else if (name === "request") {
+
+            win.webContents.send("requests-logs", messageObject.message);
           }
         }
         catch (err) {
@@ -77,27 +87,15 @@ function createMainWindow () {
     });
 
 
-    /** for later **/
-    // server.stderr.on("data", m => {
-    //   try {
-    //     const errObj = JSON.parse(m.toString());
-    //     const logger = new Logger(errObj.status, errObj.message);
-    //     win.webContents.send("logs", logger.toString());
-    //   }
-    //   catch (err) {
-    //     console.error(err);
-    //   }
-    // });
-
+    /** child process receives 'exit' signal **/
     server.on("exit", (code, signal) => {
-
       const logger = new Logger("info", `Server Terminated with signal : ${signal}`);
       win.webContents.send("server-stop", logger.toString());
 
       // console.log("Sever stopped gracefully")
     });
 
-    // stop server
+    // stop server from electron process (main process)
     ipcMain.on("stop-server", (event, args) => {
       // console.log("stop-server ipc received.")
       if (server) {
@@ -150,3 +148,21 @@ app.on("window-all-closed", () => {
     }
   }
 });
+
+
+/** Remove Event Listeners on window close **/
+function removeEventListeners (listener, events) {
+  try {
+    events.forEach(
+      event => {
+        const func = listener.listeners(event)[0];
+        if (func) {
+          listener.removeListener(event, func);
+        }
+      }
+    );
+  }
+  catch (error) {
+    console.error("Error Removing Event Listeners from Electron Main.js", error);
+  }
+}
