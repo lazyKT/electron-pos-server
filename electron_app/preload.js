@@ -13,7 +13,8 @@ const ALLOWED_RECEIVED_CHANNELS = [
   "server-socket-info",
   "database-status",
   "logs",
-  "server-stop"
+  "server-stop",
+  "requests-logs"
 ];
 
 
@@ -30,6 +31,7 @@ contextBridge.exposeInMainWorld ("api", {
     }
   },
   receive: (channel, callback) => {
+    console.log(channel);
     if (ALLOWED_RECEIVED_CHANNELS.includes(channel)) {
       ipcRenderer.on(channel, (event, ...args) => callback(...args));
     }

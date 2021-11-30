@@ -60,6 +60,11 @@ window.api.receive("database-status", status => {
 });
 
 
+window.api.receive("requests-logs", message => {
+  addLogs(`Api Request : ${message}`);
+});
+
+
 window.api.receive("logs", log => {
   console.log(log.toString());
   addLogs(log);

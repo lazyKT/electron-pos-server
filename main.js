@@ -47,7 +47,7 @@ function createMainWindow () {
     **/
 
     server.on("message", m => {
-
+      console.log(m);
       if (m === "server-ready") {
         win.webContents.send("server-status", "connected");
       }
@@ -60,7 +60,7 @@ function createMainWindow () {
         win.webContents.send("server-socket-info", m.split(':')[1]);
       }
       else {
-        console.log(m);
+
         try {
           const messageObject = JSON.parse(m);
           const { name } = messageObject;
@@ -68,6 +68,10 @@ function createMainWindow () {
           if (name === "dbstatus") {
 
             win.webContents.send("database-status", messageObject.status);
+          }
+          else if (name === "request") {
+
+            win.webContents.send("requests-logs", messageObject.message);
           }
         }
         catch (err) {
