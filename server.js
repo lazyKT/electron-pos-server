@@ -10,13 +10,15 @@ const Config = require("./express_server/config");
 let PORT
 
 /**
-# Connect to Mongo Db
-**/
-mongoose.connect(Config.dbURL)
+ * Connect to Mongo Db
+ * Run Test Server -> $ NODE_ENV=test node server.js
+ **/
+const dbUrl = process.env.NODE_ENV === 'test' ? Config.testDB : Config.dbURL;
+mongoose.connect(dbUrl)
   .then(() => {
-    console.log("MongoDB Connected.");
+    console.log(`Connected to ${dbUrl}`);
     Config.dbstaus = "connected";
-    process.send('{"name": "dbstatus", "status": "connected"}');
+    process.env.NODE_ENV !== 'test' && process.send('{"name": "dbstatus", "status": "connected"}');
   })
   .catch(err => {
     Config.dbStatus = "error";
@@ -56,6 +58,17 @@ const server = app.listen(8080, () => {
   // PORT = server.address().port;
   PORT = 8080;
   console.log("Server is running at PORT:", PORT);
-  process.send("server-ready");
-  process.send(`server-port:${PORT}`);
+
+  if (process.env.NODE_ENV !== 'test') {
+    process.send("server-ready");
+    process.send(`server-port:${PORT}`);
+  } 
+  else {
+    console.log ('Running Server in Test Environment...')
+  }
 });
+
+
+// for integration testing
+module.exports = server;
+

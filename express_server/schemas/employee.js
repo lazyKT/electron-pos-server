@@ -38,9 +38,9 @@ const employeeSchema = new mongoose.Schema({
 
 function validateEmployee (emp) {
   const schema = Joi.object({
-    username: Joi.string().required(),
-    mobile: Joi.string().required(),
-    fullName: Joi.string().required(),
+    username: Joi.string().min(4).max(20).required(),
+    mobile: Joi.string().min(6).max(15).required(),
+    fullName: Joi.string().min(5).max(72).required(),
     level: Joi.number().integer().min(1).max(3).required(),
     password: Joi.string().required()
   });

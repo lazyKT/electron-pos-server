@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
+const mongoose = require("mongoose");
 const Lodash = require("lodash");
+const validateObjectId = require('../middlewares/validateObjectId');
+
 
 const {
   Employee,
@@ -9,7 +12,6 @@ const {
   validateEmployeeEditRequest,
   validateLogin
 } = require("../schemas/employee");
-
 const { requestLogger } = require("../logger");
 
 
@@ -71,7 +73,7 @@ router.post("/", async (req, res) => {
     emp = await emp.save();
 
     requestLogger(`[POST] ${req.baseUrl} - 201`);
-    res.status(201).send(Lodash.pick(emp, ["username", "level", "mobile", "_id"]));
+    res.status(201).send(Lodash.pick(emp, ["username", "fullName", "level", "mobile", "_id"]));
   }
   catch (error) {
     requestLogger(`[POST] ${req.baseUrl} - 500`);
@@ -102,7 +104,7 @@ router.post("/login", async (req, res) => {
 
       if (status === 401) {
         requestLogger(`[POST] ${req.baseUrl}/login - 401`);
-        return res.status(403).send(JSON.stringify({"message" : message}));
+        return res.status(401).send(JSON.stringify({"message" : message}));
       }
 
       let empData = Lodash.pick(emp, ["_id", "username", "mobile", "level", "fullName"]);
@@ -144,8 +146,9 @@ router.get("/search", async (req, res) => {
 
 
 /** get employee by id **/
-router.get("/:id", async(req, res) => {
+router.get("/:id", validateObjectId, async(req, res) => {
   try {
+
     const emp = await Employee.findById(req.params.id);
 
     if (!emp) {
@@ -154,7 +157,7 @@ router.get("/:id", async(req, res) => {
     }
 
     requestLogger(`[GET] ${req.baseUrl}/${req.params.id} - 200`);
-    res.status(201).send(Lodash.pick(emp, ["_id", "username", "mobile", "level", "fullName"]));
+    res.status(200).send(Lodash.pick(emp, ["_id", "username", "mobile", "level", "fullName"]));
   }
   catch (error) {
     requestLogger(`[GET] ${req.baseUrl}/${req.params.id} - 500`);
@@ -164,7 +167,7 @@ router.get("/:id", async(req, res) => {
 
 
 /** edit employee **/
-router.put("/:id", async (req, res) => {
+router.put("/:id", validateObjectId, async (req, res) => {
   try {
 
     const { error, message } = validateEmployeeEditRequest(req.body);
@@ -195,7 +198,7 @@ router.put("/:id", async (req, res) => {
 
 
 /** delete employee **/
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", validateObjectId, async (req, res) => {
   try {
 
     const emp = await Employee.findByIdAndRemove(req.params.id);
