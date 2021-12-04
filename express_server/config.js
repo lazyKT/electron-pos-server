@@ -4,4 +4,5 @@ module.exports = {
   serverstatus: "unknown",
   dbURL: "mongodb://localhost/pharmacy",
   dbStatus: "unknown",
+  testDB: "mongodb://localhost/pharmacy_test"
 }
