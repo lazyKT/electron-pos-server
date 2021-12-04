@@ -7,7 +7,7 @@ const Joi = require('joi')
               .extend(require('@joi/date'));
 
 
-const invoiceItemSchema = new mongoose.Schema({
+const serviceSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true
@@ -31,21 +31,56 @@ const invoiceItemSchema = new mongoose.Schema({
 });
 
 
+const cartItemSchema = new mongoose.Schema({
+  productId: {
+    type: String,
+    required: true
+  },
+  productNumber: {
+    type: String,
+    required: true
+  },
+  productName: {
+    type: String,
+    required: true
+  },
+  tagId: {
+    type: String,
+    required: true
+  },
+  price: {
+    type: Number,
+    required: true
+  },
+  qty: {
+    type: Number,
+    required: true
+  },
+  totalPrice: {
+    type: Number,
+    required: true
+  },
+  remark: {
+    type: String
+  }
+});
+
+
 
 const clinicInvoiceSchema = new mongoose.Schema({
   invoiceNumber: {
     type: String,
     required: true
   },
-  employeeId: {
+  employeeID: {
     type: String,
     required: true
   },
-  employeeName: {
+  cashier: {
     type: String,
     required: true
   },
-  doctorId: {
+  doctorID: {
     type: String,
     required: true
   },
@@ -57,11 +92,12 @@ const clinicInvoiceSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  patientId: {
+  patientID: {
     type: String,
     required: true
   },
-  invoiceItems: [invoiceItemSchema],
+  services: [ serviceSchema ],
+  items: [ cartItemSchema ],
   payableAmount: {
     type: Number,
     required: true
@@ -89,23 +125,31 @@ const clinicInvoiceSchema = new mongoose.Schema({
 function validateClinicInvoice (invoice) {
   const schema = Joi.object({
     invoiceNumber: Joi.string().min(17).max(17).required(),
-    employeeId: Joi.string().required(),
-    employeeName: Joi.string().required(),
+    employeeID: Joi.string().required(),
+    cashier: Joi.string().required(),
     doctorName: Joi.string().required(),
-    doctorId: Joi.string().required(),
+    doctorID: Joi.string().required(),
     patientName: Joi.string().required(),
-    patientId: Joi.string().required(),
+    patientID: Joi.string().required(),
     payableAmount: Joi.number().min(0).required(),
     givenAmount: Joi.number().min(0).required(),
     changeAmount: Joi.number().min(0).required(),
     remark: Joi.string(),
-    invoiceItems: Joi.array().items({
-      description: Joi.string().min(4).required(),
+    items: Joi.array().items({
+      productNumber: Joi.string().required(),
+      productName: Joi.string().required(),
+      productId: Joi.string().required(),
+      tagId: Joi.string().required(),
+      price: Joi.number().required(),
+      qty: Joi.number().required(),
+      totalPrice: Joi.number().required()
+    }),
+    services: Joi.array().items({
+      description: Joi.string().required(),
       qty: Joi.number().min(1).required(),
       price: Joi.number().min(0).required(),
-      totalPrice: Joi.number().min(0).required(),
-      note: Joi.string()
-    });
+      totalPrice: Joi.number().min(0).required()
+    })
   });
 
   const validationResult = schema.validate(invoice);

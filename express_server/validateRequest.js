@@ -31,7 +31,7 @@ exports.validateMedCheckOut = function (requestBody) {
 
 
 /**
-# Validate QueryString for Medicine Search at Checkout
+# Validate QueryString for Medicine Search at Pharmacy Cashier
 # Query String must be included
 # Qyery String must be a string type value
 # Query must not be null, undefined or empty
@@ -51,3 +51,27 @@ exports.validateMedCheckOutSearchQueries = function (requestQuery) {
 
   return {error: false};
 }
+
+
+/**
+ * Validate Service Items and Medicine Items at Clinic Cashier
+ * Request body must contain both Service and medication items
+ * At least 1 service/medicine items must be present in the request body
+ **/
+exports.validateServiceAndMedicinesItems = function (requestBody) {
+  
+  if (!requestBody.items) 
+    return { error: true, message: "Missing Required Field (Medication)" };
+
+  if (!requestBody.services)
+    return { error: true, message: "Missing Required Field (Services)" };
+
+  if (requestBody.services && requestBody.services.length < 1) 
+    return { error: true, message: "Services Cannot be Empty!"}
+
+  if (requestBody.items && requestBody.items.length < 1)
+    return { error: true, message: "Medication Cannot be Empty!"}
+
+  return { error: false };
+}
+

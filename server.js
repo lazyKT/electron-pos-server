@@ -30,7 +30,8 @@ const home = require("./express_server/routes/home");
 const medicine = require("./express_server/routes/medicine");
 const tag = require("./express_server/routes/tag");
 const employee = require("./express_server/routes/employee");
-const invoice = require("./express_server/routes/pharmacyInvoice");
+const pharmacyInvoice = require("./express_server/routes/pharmacyInvoice");
+const clinicInvoice = require("./express_server/routes/clinicInvoice");
 
 
 const app = express();
@@ -40,7 +41,8 @@ app.use("/", home);
 app.use("/api/meds", medicine);
 app.use("/api/tags", tag);
 app.use("/api/employees", employee);
-app.use("/api/pharmacy/invoices", invoice);
+app.use("/api/pharmacy/invoices", pharmacyInvoice);
+app.use("/api/clinic/invoices", clinicInvoice);
 
 
 process.on("message", m => {
