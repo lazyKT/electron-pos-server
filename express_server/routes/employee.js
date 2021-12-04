@@ -73,7 +73,7 @@ router.post("/", async (req, res) => {
     emp = await emp.save();
 
     requestLogger(`[POST] ${req.baseUrl} - 201`);
-    res.status(201).send(Lodash.pick(emp, ["username", "level", "mobile", "_id"]));
+    res.status(201).send(Lodash.pick(emp, ["username", "fullName", "level", "mobile", "_id"]));
   }
   catch (error) {
     requestLogger(`[POST] ${req.baseUrl} - 500`);
@@ -104,7 +104,7 @@ router.post("/login", async (req, res) => {
 
       if (status === 401) {
         requestLogger(`[POST] ${req.baseUrl}/login - 401`);
-        return res.status(403).send(JSON.stringify({"message" : message}));
+        return res.status(401).send(JSON.stringify({"message" : message}));
       }
 
       let empData = Lodash.pick(emp, ["_id", "username", "mobile", "level", "fullName"]);
