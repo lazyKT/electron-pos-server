@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "jest --watchAll --verbose --detectOpenHandles",
+    "test": "jest --verbose --detectOpenHandles",
     "start": "electron .",
     "watch": "nodemon --exec electron .",
     "server": ""
