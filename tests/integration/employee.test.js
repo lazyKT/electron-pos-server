@@ -7,7 +7,7 @@ const request = require('supertest');
 const { Employee } = require('../../express_server/schemas/employee');
 
 
-let server 
+let server
 
 
 describe('/api/employees', () => {
@@ -25,7 +25,11 @@ describe('/api/employees', () => {
 		// clean up database after test suite
 		await Employee.deleteMany({});
 	});
-	
+
+	afterAll(async () => {
+	await new Promise(resolve => setTimeout(() => resolve(), 500)); // avoid jest open handle error
+});
+
 	// get all employees
 	describe ('GET /', () => {
 
@@ -40,7 +44,7 @@ describe('/api/employees', () => {
 			]);
 
 			const response = await request(server).get('/api/employees');
-			
+
 			expect(response.status).toBe(200);
 			expect(response.body.length).toBe(4);
 			expect(response.body.some (emp => emp.username === 'user1'));
@@ -55,7 +59,7 @@ describe('/api/employees', () => {
 
 		it ('should return employee if valid id is given', async () => {
 
-			const emp = new Employee({ 
+			const emp = new Employee({
 				username: 'user1',
 				fullName: 'User One',
 				mobile: '12341234',
@@ -65,7 +69,7 @@ describe('/api/employees', () => {
 			await emp.save();
 
 			const response = await request(server).get(`/api/employees/${emp._id}`);
-			
+
 			expect(response.status).toBe(200);
 			expect(response.body).toHaveProperty('username', emp.username);
 			expect(response.body).toHaveProperty('fullName', emp.fullName);
@@ -153,7 +157,7 @@ describe('/api/employees', () => {
 	describe ('POST /login', () => {
 
 		it ('should return 400 if invalid credentials is given', async () => {
-			const emp = new Employee({ 
+			const emp = new Employee({
 				username: 'user1',
 				fullName: 'User One',
 				mobile: '12341234',
@@ -171,7 +175,7 @@ describe('/api/employees', () => {
 		});
 
 		it ('should return 401 if wrong password is given', async () => {
-			const emp = new Employee({ 
+			const emp = new Employee({
 				username: 'user1',
 				fullName: 'User One',
 				mobile: '12341234',
@@ -189,7 +193,7 @@ describe('/api/employees', () => {
 		});
 
 		it ('should return 200 if authentication is success', async () => {
-			const emp = new Employee({ 
+			const emp = new Employee({
 				username: 'user1',
 				fullName: 'User One',
 				mobile: '12341234',
@@ -225,7 +229,7 @@ describe('/api/employees', () => {
 
 		it ('should return 201 if employee is updated', async () => {
 
-			const emp = new Employee({ 
+			const emp = new Employee({
 				username: 'user1',
 				fullName: 'User One',
 				mobile: '12341234',
@@ -260,7 +264,7 @@ describe('/api/employees', () => {
 
 		it ('should return 201 if employee is updated', async () => {
 
-			const emp = new Employee({ 
+			const emp = new Employee({
 				username: 'user1',
 				fullName: 'User One',
 				mobile: '12341234',
