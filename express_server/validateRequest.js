@@ -53,14 +53,26 @@ exports.validateMedCheckOutSearchQueries = function (requestQuery) {
 }
 
 
+
+/**
+ * Validate Clinic Invoice Request body
+ * Validate ObjectId
+ * Check Valid Fields
+ **/
+exports.validateEmployeeObjectIDClinicInvoice = function (employeeID) {
+  if (!mongoose.Types.ObjectId.isValid(employeeID))
+    return {error: true, message: 'Invalid ObjectId Received: medId'}
+}
+
+
 /**
  * Validate Service Items and Medicine Items at Clinic Cashier
  * Request body must contain both Service and medication items
  * At least 1 service/medicine items must be present in the request body
  **/
 exports.validateServiceAndMedicinesItems = function (requestBody) {
-  
-  if (!requestBody.items) 
+
+  if (!requestBody.items)
     return { error: true, message: "Missing Required Field (Medication)" };
 
   if (requestBody.items && requestBody.items.length < 1)
@@ -69,9 +81,8 @@ exports.validateServiceAndMedicinesItems = function (requestBody) {
   if (!requestBody.services)
     return { error: true, message: "Missing Required Field (Services)" };
 
-  if (requestBody.services && requestBody.services.length < 1) 
+  if (requestBody.services && requestBody.services.length < 1)
     return { error: true, message: "Services Cannot be Empty!" }
 
   return { error: false };
 }
-
