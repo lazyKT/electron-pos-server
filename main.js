@@ -38,11 +38,11 @@ function createMainWindow () {
 
   win.on("ready-to-show", () => win.show());
 
-  win.on("close", () => { 
+  win.on("close", () => {
     if(win) {
       removeEventListeners(ipcMain, ["stop-server"]);
       removeEventListeners(win.webContents, ["did-finish-load"]);
-      win = null; 
+      win = null;
     }
   });
 
@@ -134,19 +134,19 @@ app.whenReady().then(() => {
 
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-    if (server) {
-      if (process.platform === 'win32') {
-        // kill node process on windows
-        spawn ("taskkill", ["/pid", server.pid, "/f", "/t"]);
-      }
-      else {
-        server.kill('SIGINT'); // kill server process once the app is closed
-      }
-      server = null;
+
+  app.quit();
+  if (server) {
+    if (process.platform === 'win32') {
+      // kill node process on windows
+      spawn ("taskkill", ["/pid", server.pid, "/f", "/t"]);
     }
+    else {
+      server.kill('SIGINT'); // kill server process once the app is closed
+    }
+    server = null;
   }
+
 });
 
 
