@@ -97,7 +97,7 @@ describe('/api/clinic/invoices', () => {
     });
 
 
-    it ('should return 400 if empty services/items list are given', async () => {
+    it ('should return 400 if empty services list is given', async () => {
       const invoice = {
         invoiceNumber: '20210912100428345',
         changeAmount: 100,

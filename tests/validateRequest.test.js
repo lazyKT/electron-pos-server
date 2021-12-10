@@ -124,7 +124,7 @@ describe ('Validate Query String for Medicine Search at Checkout', () => {
 
 
 /**
- * Validate Medication and Service Item for Clinic Cashier 
+ * Validate Medication and Service Item for Clinic Cashier
  **/
 describe ('Validate Medication and Service Item for Clinic Cashier ', () => {
 
@@ -132,21 +132,12 @@ describe ('Validate Medication and Service Item for Clinic Cashier ', () => {
     const request = {};
     const result = validateRequest.validateServiceAndMedicinesItems(request);
     expect(result.error).toEqual(true);
-    expect(result.message).toEqual("Missing Required Field (Medication)");
-  });
-
-  it ("Empty Medication Items", () => {
-    const request = {
-      items: []
-    };
-    const result = validateRequest.validateServiceAndMedicinesItems(request);
-    expect(result.error).toEqual(true);
-    expect(result.message).toEqual("Medication Cannot be Empty!");
+    expect(result.message).toEqual("Missing Required Field (items)");
   });
 
   it ("Missing Service Field", () => {
     const request = {
-      items: [ 
+      items: [
         {field: 'field'}
       ]
     };
@@ -157,7 +148,7 @@ describe ('Validate Medication and Service Item for Clinic Cashier ', () => {
 
   it ("Empty Services Items", () => {
     const request = {
-      items: [ 
+      items: [
         {field: 'field'}
       ],
       services: []
@@ -181,7 +172,3 @@ describe ('Validate Medication and Service Item for Clinic Cashier ', () => {
     expect(result.error).toEqual(false);
   });
 });
-
-
-
-

@@ -145,6 +145,7 @@ function validateClinicInvoice (invoice) {
       totalPrice: Joi.number().required()
     }),
     services: Joi.array().items({
+      id: Joi.number().allow(null),
       description: Joi.string().required(),
       qty: Joi.number().min(1).required(),
       price: Joi.number().min(0).required(),

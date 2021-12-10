@@ -73,10 +73,7 @@ exports.validateEmployeeObjectIDClinicInvoice = function (employeeID) {
 exports.validateServiceAndMedicinesItems = function (requestBody) {
 
   if (!requestBody.items)
-    return { error: true, message: "Missing Required Field (Medication)" };
-
-  if (requestBody.items && requestBody.items.length < 1)
-    return { error: true, message: "Medication Cannot be Empty!" }
+    return { error: true, message: "Missing Required Field (items)" }
 
   if (!requestBody.services)
     return { error: true, message: "Missing Required Field (Services)" };
