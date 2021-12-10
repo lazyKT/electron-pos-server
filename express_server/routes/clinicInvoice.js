@@ -1,7 +1,8 @@
 /**
  * API Endpoints for Clinic Cashier
  **/
- 
+
+const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 
@@ -32,7 +33,7 @@ router.post('/', async (req, res) => {
 		if (validateCartItems.error) {
 			requestLogger(`[POST] ${req.baseUrl} - 400`);
 			return res.status(400).send(JSON.stringify({"message" : validateCartItems.message}));
-		} 
+		}
 
 		// validate other fields in the request body
 		const { error } = validateClinicInvoice(req.body);
@@ -41,10 +42,16 @@ router.post('/', async (req, res) => {
 			return res.status(400).send(JSON.stringify({"message" : error.details[0].message}));
 		}
 
+    if (!mongoose.Types.ObjectId.isValid(req.body.employeeID)) {
+      requestLogger(`[POST] ${req.baseUrl} - 400`);
+      return res.status(400).send(JSON.stringify({"message" : 'Invalid ObjectId Received: employeeID'}));
+    }
+
 		// validate employee in the request body
 		const emp = await Employee.findById(req.body.employeeID);
 		if (!emp) {
 			requestLogger(`[POST] ${req.baseUrl} - 400`);
+      console.log("Employee Not Found!");
 			return res.status(400).send(JSON.stringify({"message" : "Employee Not Found!"}));
 		}
 
@@ -52,6 +59,7 @@ router.post('/', async (req, res) => {
 		let invoice = await ClinicInvoice.findOne({"invoiceNumber" : req.body.invoiceNumber});
 		if (invoice) {
 			requestLogger(`[POST] ${req.baseUrl} - 400`);
+      console.log("Error, duplicate invoice numbers!");
 			return res.status(400).send(JSON.stringify({"message" : "Error, duplicate invoice numbers!"}));
 		}
 
@@ -59,7 +67,7 @@ router.post('/', async (req, res) => {
 		// validate medcines in the medication item list
 		Promise.all (req.body.items.map( async item => {
 			const med = await Medicine.findOne({"productNumber" : item.productNumber});
-			if (!med) throw new Error(`Invalid Product ID. Medicine, ${item.productName} Not Found`);
+			if (!med) throw new Error(`Invalid Product Number, ${item.productNumber} Not Found`);
 			return med;
 		}))
 		.then (async () => {
@@ -86,12 +94,14 @@ router.post('/', async (req, res) => {
 			return res.status(201).send(invoice);
 		})
 		.catch ( error => {
+      console.error('Thrown From Promise All');
 			console.error(error);
 			requestLogger(`[POST] ${req.baseUrl} - 400`);
-			return res.status(400).send(JSON.stringify({"message" : error}));
+			return res.status(400).send(JSON.stringify({"message" : error.message}));
 		});
 	}
 	catch (error) {
+    console.log('error', error);
 		requestLogger(`[POST] ${req.baseUrl} - 500`);
 		res.status(500).send(JSON.stringify({"message" : "Internal Server Error"}));
 	}
