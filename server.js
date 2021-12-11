@@ -32,6 +32,7 @@ const home = require("./express_server/routes/home");
 const medicine = require("./express_server/routes/medicine");
 const tag = require("./express_server/routes/tag");
 const employee = require("./express_server/routes/employee");
+const patient = require("./express_server/routes/patient");
 const pharmacyInvoice = require("./express_server/routes/pharmacyInvoice");
 const clinicInvoice = require("./express_server/routes/clinicInvoice");
 
@@ -43,6 +44,7 @@ app.use("/", home);
 app.use("/api/meds", medicine);
 app.use("/api/tags", tag);
 app.use("/api/employees", employee);
+app.use("/api/patients", patient);
 app.use("/api/pharmacy/invoices", pharmacyInvoice);
 app.use("/api/clinic/invoices", clinicInvoice);
 
@@ -62,7 +64,7 @@ const server = app.listen(8080, () => {
   if (process.env.NODE_ENV !== 'test') {
     process.send("server-ready");
     process.send(`server-port:${PORT}`);
-  } 
+  }
   else {
     console.log ('Running Server in Test Environment...')
   }
@@ -71,4 +73,3 @@ const server = app.listen(8080, () => {
 
 // for integration testing
 module.exports = server;
-
