@@ -118,6 +118,21 @@ router.get ('/search', async (req, res) => {
 });
 
 
+// patients count
+router.get('/count', async (req, res) => {
+  try {
+    const count = await Patient.count();
+
+    requestLogger(`[GET] ${req.baseUrl}/count - 200`);
+    res.status(200).send(JSON.stringify({'count' : count}));
+  }
+  catch (error) {
+    requestLogger(`[GET] ${req.baseUrl}/count - 500`);
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+  }
+});
+
+
 // get patient details by id
 router.get ('/:id', validateObjectId, async (req, res) => {
   try {
