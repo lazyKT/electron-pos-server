@@ -8,6 +8,7 @@ const router = express.Router();
 const {
   Patient,
   validatePatientEntry,
+  validatePatientUpdate,
   generatePatientId
 } = require('../schemas/patient');
 const { requestLogger } = require('../logger');
@@ -16,7 +17,35 @@ const validateObjectId = require('../middlewares/validateObjectId');
 // get all patients
 router.get('/', async (req, res) => {
   try {
-    const patients = await Patient.find();
+
+    let page = 0;
+    let limit = 10;
+    let sort = 'fullname';
+    let order = 1;
+    let sortObj = {};
+
+    if (req.query.page && parseInt(req.query.page) > 0)
+      page = parseInt(req.query.page) - 1;
+
+    if (req.query.limit)
+      limit = parseInt(req.query.limit)
+
+    if (req.query.sort && req.query.sort !== '')
+      sort = req.query.sort;
+
+    if (req.query.order && (req.query.order === '-1' || req.query.order === '1'))
+      order = parseInt(req.query.order);
+
+    sortObj[sort] = order;
+
+    const patients = await Patient.find(
+      {},
+      null,
+      {
+        skip: page * limit,
+        limit
+      }
+    ).sort(sortObj);
 
     requestLogger(`[GET] ${req.baseUrl} - 200`);
     res.status(200).send(patients);
@@ -49,7 +78,7 @@ router.post('/', async (req, res) => {
       mobile: requestBody.mobile,
       address: requestBody.address,
       gender: requestBody.gender,
-      age: requestBody.age,
+      birthday: requestBody.birthday,
       allergies: requestBody.allergies,
       remark: requestBody.allergies
     });
@@ -60,8 +89,30 @@ router.post('/', async (req, res) => {
     res.status(201).send(patient);
   }
   catch (error) {
-    console.error(error);
     requestLogger(`[POST] ${req.baseUrl} - 500`);
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+  }
+});
+
+
+// search patients by name
+router.get ('/search', async (req, res) => {
+  try {
+    let patients;
+    if (!req.query.q || req.query.q === '') {
+      patients = [];
+    }
+    else {
+      patients = await Patient.find({
+        'fullname': { $regex: req.query.q, $options: 'i'}
+      });
+    }
+
+    requestLogger(`[GET] ${req.baseUrl}/search - 200`);
+    res.status(200).send(patients);
+  }
+  catch (error) {
+    requestLogger(`[GET] ${req.baseUrl}/search - 500`);
     res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
   }
 });
@@ -70,19 +121,21 @@ router.post('/', async (req, res) => {
 // get patient details by id
 router.get ('/:id', validateObjectId, async (req, res) => {
   try {
+    console.log(req.params.id);
     const patient = await Patient.findById(req.params.id);
-
+    console.log(patient);
     if (!patient) {
       requestLogger(`[GET] ${req.baseUrl}/${req.params.id} - 404`);
-      return res.status(404).send(JSON.stirngify({'message' : 'Patient Not Found!'}))
+      return res.status(404).send(JSON.stringify({'message' : 'Patient Not Found!'}))
     }
 
     requestLogger(`[GET] ${req.baseUrl}/${req.params.id} - 200`);
     res.status(200).send(patient);
   }
   catch (error) {
+    console.error(error);
     requestLogger(`[GET] ${req.baseUrl}/${req.params.id} - 500`);
-    res.status(500).send(JSON.stirngify({'message' : 'Internal Server Error!'}));
+    return res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
   }
 });
 
@@ -90,6 +143,12 @@ router.get ('/:id', validateObjectId, async (req, res) => {
 // edit patient details by id
 router.put('/:id', validateObjectId, async (req, res) => {
   try {
+
+    const { error } = validatePatientUpdate(req.body);
+    if (error) {
+      requestLogger(`[POST] ${req.baseUrl}/${req.params.id} - 400`);
+      return res.status(400).send(JSON.stringify({'message' : error.details[0].message}));
+    }
 
     const patient = await Patient.findByIdAndUpdate(
       req.params.id,
@@ -107,13 +166,13 @@ router.put('/:id', validateObjectId, async (req, res) => {
   }
   catch (error) {
     requestLogger(`[PUT] ${req.baseUrl}/${req.params.id} - 500`);
-    res.status(500).send(JSON.stirngify({'message' : 'Internal Server Error!'}));
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
   }
 });
 
 
 // delete patient by id
-router.delete('/:id', validateObjectId, async (req, id) => {
+router.delete('/:id', validateObjectId, async (req, res) => {
   try {
     const patient = await Patient.findByIdAndRemove(req.params.id);
 
@@ -127,7 +186,7 @@ router.delete('/:id', validateObjectId, async (req, id) => {
   }
   catch (error) {
     requestLogger(`[DELETE] ${req.baseUrl}/${req.params.id} - 500`);
-    res.status(500).send(JSON.stirngify({'message' : 'Internal Server Error!'}));
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
   }
 });
 

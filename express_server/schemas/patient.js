@@ -26,8 +26,8 @@ const patientSchema = new mongoose.Schema({
     maxLength: 16,
     required: true,
   },
-  age: {
-    type: Number,
+  birthday: {
+    type: Date,
     required: true,
   },
   gender: {
@@ -65,7 +65,32 @@ function validatePatientEntry (patient) {
     patientId: Joi.string().min(10).required(),
     fullname: Joi.string().min(4).max(50).required(),
     gender: Joi.string().min(1).max(6).required(),
-    age: Joi.number().min(0).required(),
+    birthday: Joi.date()
+      .format ("YYYY-MM-DD")
+      .raw()
+      .required()
+      .messages({
+        'date.base': `"expiry" should be a type of 'text'`,
+        'date.empty': `"expiry" cannot be an empty field`,
+        'date.min': `"expiry" should have a minimum length of {#limit}`,
+        'date.required': `"expiry" is a required field`,
+        'date.format.iso': `"expiry" date format wrong.`,
+        'date.format.javascript': `'expiry' date fromat wrong javascript`,
+        'date.format.unix': `'expiry' date format wrong unix`
+      }),
+    mobile: Joi.string().min(8).max(16).required(),
+    address: Joi.string().min(10).required(),
+    remark: Joi.string().allow(null).allow(''),
+    allergies: Joi.string().allow(null).allow('')
+  });
+
+  return schema.validate(patient);
+}
+
+
+function validatePatientUpdate (patient) {
+  const schema = Joi.object({
+    fullname: Joi.string().min(10).required(),
     mobile: Joi.string().min(8).max(16).required(),
     address: Joi.string().min(10).required(),
     remark: Joi.string().allow(null).allow(''),
@@ -110,3 +135,4 @@ const Patient = new mongoose.model("Patient", patientSchema);
 exports.Patient = Patient;
 exports.validatePatientEntry = validatePatientEntry;
 exports.generatePatientId = generatePatientId;
+exports.validatePatientUpdate = validatePatientUpdate;
