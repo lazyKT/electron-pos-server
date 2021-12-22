@@ -8,9 +8,9 @@ const router = express.Router();
 const {
   Patient,
   validatePatientEntry,
-  validatePatientUpdate,
-  generatePatientId
+  validatePatientUpdate
 } = require('../schemas/patient');
+const { generateId } = require('../utils');
 const { requestLogger } = require('../logger');
 const validateObjectId = require('../middlewares/validateObjectId');
 
@@ -63,7 +63,7 @@ router.post('/', async (req, res) => {
 
     const requestBody = {
       ...req.body,
-      patientId: generatePatientId()
+      patientId: generateId('pt')
     };
 
     const { error } = validatePatientEntry(requestBody);

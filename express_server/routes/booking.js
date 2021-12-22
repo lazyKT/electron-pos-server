@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 const { Service } = require('../schemas/service');
 const { Employee } = require('../schemas/employee');
-const { Booking, validateBookingEntry, generateBookingId } = require('../schemas/booking');
+const { Booking, validateBookingEntry } = require('../schemas/booking');
 const { requestLogger } = require('../logger');
 const validateObjectId = require('../middlewares/validateObjectId');
 const { generateId } = require('../utils');
