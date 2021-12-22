@@ -36,6 +36,7 @@ const patient = require("./express_server/routes/patient");
 const pharmacyInvoice = require("./express_server/routes/pharmacyInvoice");
 const clinicInvoice = require("./express_server/routes/clinicInvoice");
 const booking = require("./express_server/routes/booking");
+const services = require('./express_server/routes/service');
 
 
 const app = express();
@@ -49,6 +50,7 @@ app.use("/api/patients", patient);
 app.use("/api/pharmacy/invoices", pharmacyInvoice);
 app.use("/api/clinic/invoices", clinicInvoice);
 app.use("/api/bookings", booking);
+app.use("/api/services", services);
 
 
 process.on("message", m => {
