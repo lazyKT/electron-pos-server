@@ -6,6 +6,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const Config = require("./express_server/config");
+const { BookingTimeSlot, saveBookingSlots } = require('./express_server/schemas/bookingTimeSlot');
 
 let PORT
 
@@ -18,6 +19,7 @@ mongoose.connect(dbUrl)
   .then(() => {
     console.log(`Connected to ${dbUrl}`);
     Config.dbstaus = "connected";
+    saveBookingSlots();
     process.env.NODE_ENV !== 'test' && process.send('{"name": "dbstatus", "status": "connected"}');
   })
   .catch(err => {

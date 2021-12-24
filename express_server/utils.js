@@ -2,6 +2,15 @@
 # Utility Functions
 **/
 
+
+// asynchronous filter function
+exports.asyncFilter = async function (arr, cb) {
+  // console.log(arr);
+  const res = await Promise.all(arr.map(cb));
+  return arr.filter((_, idx) => res[idx]);
+}
+
+
 function zeroPadding (value, type) {
   let strValue = value.toString();
   if (type === "ms") {

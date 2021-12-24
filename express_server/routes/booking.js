@@ -5,9 +5,10 @@ const mongoose = require('mongoose');
 const { Service } = require('../schemas/service');
 const { Employee } = require('../schemas/employee');
 const { Booking, validateBookingEntry } = require('../schemas/booking');
+const { BookingTimeSlot } = require('../schemas/bookingTimeSlot');
 const { requestLogger } = require('../logger');
 const validateObjectId = require('../middlewares/validateObjectId');
-const { generateId } = require('../utils');
+const { generateId, asyncFilter } = require('../utils');
 
 
 // get all bookings
@@ -92,6 +93,17 @@ router.post('/', async (req, res) => {
       return res.status(400).send(JSON.stringify({'message' : 'Service Not Found!'}));
     }
 
+    if (!mongoose.Types.ObjectId.isValid(requestBody.timeSlot)) {
+      requestLogger(`[POST] ${req.baseUrl}/ - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Invalid timeSlotId'}));
+    }
+
+    const timeSlot = await BookingTimeSlot.findById(requestBody.timeSlot);
+    if (!timeSlot) {
+      requestLogger(`[POST] ${req.baseUrl}/ - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'TimeSlot Not Found!'}));
+    }
+
 
     let booking = new Booking({
       bookingId: bookingId,
@@ -103,9 +115,10 @@ router.post('/', async (req, res) => {
       patientName: req.body.patientName,
       patientId: req.body.patientId,
       bookingDate: req.body.bookingDate,
-      bookingTime: req.body.bookingTime,
+      timeSlot: req.body.timeSlot,
+      bookingTime: `${timeSlot.startTime} - ${timeSlot.endTime}`,
       status: req.body.status,
-      remarks: req.body.remarks
+      remarks: req.body.remarks,
     });
 
     booking = await booking.save();
@@ -159,6 +172,106 @@ router.get('/count', async (req, res) => {
   catch (error) {
     console.error(error);
     requestLogger(`[GET] ${req.baseUrl}/count - 500`);
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+  }
+});
+
+
+// get bookings by date
+router.get('/available-slots', async (req, res) => {
+  try {
+    if (!req.query.date || req.query.date === '') {
+      requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Empty Date!'}));
+    }
+
+    let date1 = new Date(req.query.date);
+
+    if (!(date1 instanceof Date)) {
+      requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Invalid Date!'}));
+    }
+
+    let date2 = new Date(req.query.date);
+    date1.setDate(date1.getDate() + 1);
+
+
+
+    BookingTimeSlot.find().lean()
+      .then( async function (slots) {
+        if (!slots)
+          throw new Error('Error Fetching Time Slots');
+
+        const availableSlots = await asyncFilter(slots, async (slot) => {
+
+          const booking = await Booking.findOne({
+            'bookingDate' : {
+              $gte: date2,
+              $lt: date1
+            },
+            'timeSlot' : slot._id
+          });
+          
+          return booking === null;
+        });
+
+        requestLogger(`[GET] ${req.baseUrl}/available-slots - 200`);
+        return res.status(200).send(availableSlots);
+      });
+  }
+  catch (error) {
+    console.error(error);
+    requestLogger(`[GET] ${req.baseUrl}/by-date - 500`);
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+  }
+});
+
+
+// get all booking time slots
+router.get('/all-slots', async (req, res) => {
+  try {
+    const slots = await BookingTimeSlot.find();
+
+    res.status(200).send(slots);
+  }
+  catch (error) {
+    requestLogger(`[GET] ${req.baseUrl}/all-slots - 500`);
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+  }
+});
+
+
+// get available timeslots for the given date
+router.get('/by-date', async (req, res) => {
+  try {
+    if (!req.query.date || req.query.date === '') {
+      requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Empty Date!'}));
+    }
+
+    let date1 = new Date(req.query.date);
+
+    if (!(date1 instanceof Date)) {
+      requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Invalid Date!'}));
+    }
+
+    let date2 = new Date(req.query.date);
+    date1.setDate(date1.getDate() + 1);
+    // console.log(date1, date2);
+    const bookings = await Booking.find({
+      'bookingDate' : {
+        $gte: date2,
+        $lt: date1
+      }
+    });
+
+    requestLogger(`[GET] ${req.baseUrl}/by-date - 200`);
+    res.status(200).send(bookings);
+  }
+  catch (error) {
+    console.error(error);
+    requestLogger(`[GET] ${req.baseUrl}/available-slots - 500`);
     res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
   }
 });

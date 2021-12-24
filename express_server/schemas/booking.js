@@ -44,8 +44,12 @@ const bookingSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
+  timeSlot: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'booking_time_slot'
+  },
   bookingTime: {
-    type: Date,
+    type: String,
     required: true
   },
   status: {
@@ -97,12 +101,11 @@ function validateBookingEntry (booking) {
                   'date.format.javascript': `'dateTime' date format wrong javascript`,
                   'date.format.unix': `'dateTime' date format wrong unix`
                 }),
-    bookingTime: Joi.date().timestamp().required()
+    timeSlot: Joi.string().required()
   });
 
   return schema.validate(booking);
 }
-
 
 exports.Booking = Booking;
 exports.validateBookingEntry = validateBookingEntry;
