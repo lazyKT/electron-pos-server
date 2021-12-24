@@ -1,5 +1,13 @@
 /**
 # Schemas for booking time slots
+# Represents the each booking time slot for a day (eg. 9:00AM - 9:30AM)
+# the purpose is for us to easily track the booking data and times
+# 30-minutes interval
+# Read only data, will not accept any non-GET requests from the other parties
+# all the slots data will be added to db automatically at server app start-up
+# i.e: whenever after the database has been Connected
+# Upon addition, the 'saveBookingSlots' function checks whether the data are already saved
+# if particular data is missing, the function will add that data to db, if not, do nothing
 **/
 
 const mongoose = require('mongoose');
