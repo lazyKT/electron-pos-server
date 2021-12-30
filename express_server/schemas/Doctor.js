@@ -1,73 +1,64 @@
 /**
-# Doctor Model/Schema
-**/
+ # Db Schema for Doctors
+ **/
 
-const mongoose = require("mongoose");
-const Joi = require("joi")
-              .extend(require("@joi/date"));
+const mongoose = require('mongoose');
+const Joi = require('joi')
+              .extend(require('@joi/date'));
 
 
-
-const doctorSchema = new mongoose.schema({
+const doctorSchema = new mongoose.Schema({
   doctorId: {
     type: String,
-    minLength: 10,
     required: true
   },
   name: {
     type: String,
-    minLength: 4,
-    maxLength: 50,
     required: true
   },
-  title: {
+  specialization: {
     type: String,
-    minLength: 4,
     required: true
   },
-  mobile: {
-    type: String,
-    minLength: 8,
-    maxLength: 8,
+  workingDays: {
+    type: [ Number ],
     required: true
   },
-  address: {
+  startTime: {
     type: String,
-    minLength: 10,
     required: true
   },
-  remark: {
+  endTime: {
     type: String,
-    default: 'N/A'
+    required: true
   },
-  created: {
+  createdAt: {
     type: Date,
-    default: new Date()
+    default: Date.now()
   },
-  updated: {
+  updatedAt: {
     type: Date,
-    default: new Date()
+    default: Date.now()
   }
 });
 
 
-function validateDoctorEntry (doc) {
-  const schema = Joi.object({
-    doctorId: Joi.string().min(10).required(),
-    name: Joi.string().min(4).max(50).required(),
-    title: Joi.string().min(4).required(),
-    mobile: Joi.string().min(8).max(16).required(),
-    address: Joi.string().min(10).required(),
-    remark: Joi.string()
-  });
-
-  const result = schema.validate(doc);
-  return result;
-}
-
-
 const Doctor = new mongoose.model("Doctor", doctorSchema);
 
+
+function validateDoctorEntry (doctor) {
+  const schema = Joi.object({
+    name: Joi.string().required(),
+    specialization: Joi.string().required(),
+    startTime: Joi.string().required(),
+    endTime: Joi.string().required(),
+    workingDays: Joi.array().items(
+      Joi.number().required().min(0).max(6)
+    ).required()
+  });
+
+  return schema.validate(doctor);
+}
 
 exports.Doctor = Doctor;
 exports.validateDoctorEntry = validateDoctorEntry;

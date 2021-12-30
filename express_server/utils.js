@@ -11,6 +11,13 @@ exports.asyncFilter = async function (arr, cb) {
 }
 
 
+exports.isValidTime = function (str) {
+  const re = new RegExp(/^([0]?[1-9]|1[0-2]):([0-5]\d)\s?(AM|PM)$/i);
+
+  return re.test(str);
+}
+
+
 function zeroPadding (value, type) {
   let strValue = value.toString();
   if (type === "ms") {

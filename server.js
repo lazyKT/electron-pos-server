@@ -19,7 +19,7 @@ mongoose.connect(dbUrl)
   .then(() => {
     console.log(`Connected to ${dbUrl}`);
     Config.dbstaus = "connected";
-    saveBookingSlots();
+    saveBookingSlots(); // save time slots
     process.env.NODE_ENV !== 'test' && process.send('{"name": "dbstatus", "status": "connected"}');
   })
   .catch(err => {
@@ -35,6 +35,7 @@ const medicine = require("./express_server/routes/medicine");
 const tag = require("./express_server/routes/tag");
 const employee = require("./express_server/routes/employee");
 const patient = require("./express_server/routes/patient");
+const doctor = require('./express_server/routes/doctor');
 const pharmacyInvoice = require("./express_server/routes/pharmacyInvoice");
 const clinicInvoice = require("./express_server/routes/clinicInvoice");
 const booking = require("./express_server/routes/booking");
@@ -49,6 +50,7 @@ app.use("/api/meds", medicine);
 app.use("/api/tags", tag);
 app.use("/api/employees", employee);
 app.use("/api/patients", patient);
+app.use('/api/doctors', doctor);
 app.use("/api/pharmacy/invoices", pharmacyInvoice);
 app.use("/api/clinic/invoices", clinicInvoice);
 app.use("/api/bookings", booking);
