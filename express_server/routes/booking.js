@@ -109,11 +109,12 @@ router.post('/', async (req, res) => {
       bookingId: bookingId,
       receptionistId: req.body.receptionistId,
       receptionistName: req.body.receptionistName,
-      serviceName: req.body.serviceName,
+      serviceName: service.name,
       serviceId: req.body.serviceId,
       assignedStaffName: req.body.assignedStaffName,
       patientName: req.body.patientName,
-      patientId: req.body.patientId,
+      patientId: req.body.patientId ? req.body.patientId : 'N.A',
+      patientContact: req.body.patientContact,
       bookingDate: req.body.bookingDate,
       timeSlot: req.body.timeSlot,
       bookingTime: `${timeSlot.startTime} - ${timeSlot.endTime}`,
@@ -211,7 +212,7 @@ router.get('/available-slots', async (req, res) => {
             },
             'timeSlot' : slot._id
           });
-          
+
           return booking === null;
         });
 

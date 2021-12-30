@@ -40,6 +40,10 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  patientContact: {
+    type: String,
+    required: true
+  },
   bookingDate: {
     type: Date,
     required: true
@@ -80,11 +84,11 @@ function validateBookingEntry (booking) {
     bookingId: Joi.string().required(),
     receptionistName: Joi.string().required(),
     receptionistId: Joi.string().required(),
-    serviceName: Joi.string().required(),
     serviceId: Joi.string().required(),
     assignedStaffName: Joi.string().required(),
     patientName: Joi.string().required(),
-    patientId: Joi.string().required(),
+    patientId: Joi.string().allow('').allow(null),
+    patientContact: Joi.string().required(),
     status: Joi.string().required(),
     remarks: Joi.string().allow(''),
     bookingDate: Joi.date()
