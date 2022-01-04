@@ -7,6 +7,10 @@ const Joi = require('joi')
               .extend(require('@joi/date'));
 
 
+const workingSchedule = {
+
+}
+
 const doctorSchema = new mongoose.Schema({
   doctorId: {
     type: String,
@@ -20,18 +24,7 @@ const doctorSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  workingDays: {
-    type: [ Number ],
-    required: true
-  },
-  startTime: {
-    type: String,
-    required: true
-  },
-  endTime: {
-    type: String,
-    required: true
-  },
+  workingSchedule: [ workingSchedule ],
   createdAt: {
     type: Date,
     default: Date.now()
@@ -50,15 +43,28 @@ function validateDoctorEntry (doctor) {
   const schema = Joi.object({
     name: Joi.string().required(),
     specialization: Joi.string().required(),
-    startTime: Joi.string().required(),
-    endTime: Joi.string().required(),
-    workingDays: Joi.array().items(
-      Joi.number().required().min(0).max(6)
-    ).required()
+    workingSchedule: Joi.array().items({
+      startTime: Joi.string().required(),
+      endTime: Joi.string().required(),
+      day: Joi.number().min(0).max(6).required(),
+    })
   });
 
   return schema.validate(doctor);
 }
 
+
+function validateWorkingSchedule (schedule) {
+  const schema = Joi.object({
+    doctorId: Joi.string().required(),
+    startTime: Joi.string().required(),
+    endTime: Joi.string().required(),
+    day: Joi.number().min(0).max(6).required(),
+  });
+
+  return schema.validate(schedule);
+}
+
 exports.Doctor = Doctor;
 exports.validateDoctorEntry = validateDoctorEntry;
+exports.validateWorkingSchedule = validateWorkingSchedule;
