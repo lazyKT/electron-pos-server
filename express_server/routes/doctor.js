@@ -4,9 +4,12 @@
 
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
+const Lodash = require('lodash');
 
-const { Doctor, validateDoctorEntry } = require('../schemas/doctor.js');
+const { Doctor, validateDoctorEntry, validateWorkingSchedule } = require('../schemas/doctor.js');
 const { requestLogger } = require('../logger');
+const { validateScheduleTiming } = require('../validateRequest');
 const { isValidTime, generateId } = require('../utils');
 const validateObjectId = require('../middlewares/validateObjectId');
 
@@ -65,23 +68,23 @@ router.post ('/', async (req, res) => {
       return res.status(200).send(JSON.stringify({'message' : error.details[0].message }));
     }
 
-    if (!(isValidTime(req.body.startTime))) {
-      requestLogger(`[POST] ${req.baseUrl} - 400`);
-      return res.status(200).send(JSON.stringify({'message' : 'Field, startTime, is not a valid date-time value' }));
-    }
+    req.body.workingSchedule.forEach( ws => {
+      if (!(isValidTime(ws.startTime))) {
+        requestLogger(`[POST] ${req.baseUrl} - 400`);
+        return res.status(200).send(JSON.stringify({'message' : 'Field, startTime, is not a valid date-time value' }));
+      }
 
-    if (!(isValidTime(req.body.endTime))) {
-      requestLogger(`[POST] ${req.baseUrl} - 400`);
-      return res.status(200).send(JSON.stringify({'message' : 'Field, endTime, is not a valid date-time value' }));
-    }
+      if (!(isValidTime(ws.endTime))) {
+        requestLogger(`[POST] ${req.baseUrl} - 400`);
+        return res.status(200).send(JSON.stringify({'message' : 'Field, endTime, is not a valid date-time value' }));
+      }
+    });
 
     let doctor = new Doctor({
       doctorId: generateId('doc'),
       name: req.body.name,
       specialization: req.body.specialization,
-      startTime: req.body.startTime,
-      endTime: req.body.endTime,
-      workingDays: req.body.workingDays
+      workingSchedule: req.body.workingSchedule
     });
 
     doctor = await doctor.save();
@@ -92,6 +95,113 @@ router.post ('/', async (req, res) => {
   catch (error) {
     console.error(error.message);
     requestLogger(`[GET] ${req.baseUrl} - 500`);
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+  }
+});
+
+
+// add working schedule
+router.put ('/add-schedule', async (req, res) => {
+  try {
+    const { error } = validateWorkingSchedule (req.body);
+    if (error) {
+      requestLogger(`[POST] ${req.baseUrl}/add-schedule - 400`);
+      return res.status(200).send(JSON.stringify({'message' : error.details[0].message }));
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(req.body.doctorId)) {
+      requestLogger (`[PUT] ${req.baseUrl}/add-schedule - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Invalid Doctor Id!'}));
+    }
+
+    let doctor = await Doctor.findById(req.body.doctorId);
+    if (!doctor) {
+      requestLogger (`[PUT] ${req.baseUrl}/add-schedule - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Doctor Not Found!'}));
+    }
+
+    if (!(isValidTime(req.body.startTime))) {
+      requestLogger(`[PUT] ${req.baseUrl}/add-schedule - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Field, startTime, is not a valid date-time value' }));
+    }
+
+    if (!(isValidTime(req.body.endTime))) {
+      requestLogger(`[PUT] ${req.baseUrl}/add-schedule - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Field, endTime, is not a valid date-time value' }));
+    }
+
+    const { error: timingError, message } = validateScheduleTiming(doctor.workingSchedule, req.body);
+    if (timingError) {
+      requestLogger(`[PUT] ${req.baseUrl}/add-schedule - 400`);
+      return res.status(400).send(JSON.stringify({'message' : message }));
+    }
+
+    const workingSchedule = [
+      ...doctor.workingSchedule,
+      {
+        startTime: req.body.startTime,
+        endTime: req.body.endTime,
+        day: req.body.day
+      }
+    ];
+
+    doctor = await Doctor.findByIdAndUpdate(
+      req.body.doctorId,
+      { workingSchedule, updatedAt: Date.now() },
+      { new : true }
+    );
+
+    requestLogger(`[PUT] ${req.baseUrl}/add-schedule - 201`);
+    return res.status(201).send(doctor);
+  }
+  catch (error) {
+    console.error(error.message);
+    requestLogger(`[PUT] ${req.baseUrl}/add-schedule - 500`);
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+  }
+});
+
+
+// remove working schedule
+router.put ('/remove-schedule', async (req, res) => {
+  try {
+    const { error } = validateWorkingSchedule (req.body);
+    if (error) {
+      requestLogger(`[POST] ${req.baseUrl}/add-schedule - 400`);
+      return res.status(200).send(JSON.stringify({'message' : error.details[0].message }));
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(req.body.doctorId)) {
+      requestLogger (`[PUT] ${req.baseUrl}/add-schedule - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Invalid Doctor Id!'}));
+    }
+
+    let doctor = await Doctor.findById(req.body.doctorId);
+    if (!doctor) {
+      requestLogger (`[PUT] ${req.baseUrl}/add-schedule - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Doctor Not Found!'}));
+    }
+
+    const scheduleToRemove = {
+      startTime: req.body.startTime,
+      endTime: req.body.endTime,
+      day: req.body.day
+    }
+
+    const workingSchedule = doctor.workingSchedule.filter(ws => !(Lodash.isEqual(ws, scheduleToRemove)));
+
+    doctor = await Doctor.findByIdAndUpdate(
+      req.body.doctorId,
+      { workingSchedule, updatedAt : Date.now() },
+      { new : true }
+    );
+
+    requestLogger(`[PUT] ${req.baseUrl}/remove-schedule - 201`);
+    return res.status(201).send(doctor);
+  }
+  catch (error) {
+    console.error(error.message);
+    requestLogger(`[PUT] ${req.baseUrl}/remove-schedule - 500`);
     res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
   }
 });

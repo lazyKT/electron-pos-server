@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const { to24HourFormat } = require('./utils');
+
 /**
 # Validate Medicine Request Body at Checkout
 # Request Body must include tagId, medId an qty properties
@@ -82,4 +84,51 @@ exports.validateServiceAndMedicinesItems = function (requestBody) {
     return { error: true, message: "Services Cannot be Empty!" }
 
   return { error: false };
+}
+
+
+/**
+ * validate doctor's working schedule, endTime , startTime
+ * new startTime must be grater/later than current schedule end time
+ * new endtime must be earlier than current schedule start time
+ **/
+exports.validateScheduleTiming = function (schedules, requestBody) {
+
+  let message = '';
+  let error = false;
+  const startHour = to24HourFormat(requestBody.startTime);
+  const endHour = to24HourFormat(requestBody.endTime);
+
+  schedules.some (sch => {
+
+    const currentStartHour = to24HourFormat(sch.startTime);
+    const currentEndHour = to24HourFormat(sch.endTime);
+    
+    if (startHour === currentStartHour) {
+      error = true;
+      message = `Invalid Start Time. Conflict with existing schedule time, ${sch.startTime}-${sch.endTime}`;
+      return true;
+    }
+    else if (endHour === currentEndHour) {
+      error = true;
+      message = `Invalid End Time. Conflict with existing schedule time, ${sch.startTime}-${sch.endTime}`;
+      return true;
+    }
+    else if (startHour < currentEndHour && startHour > currentStartHour) {
+      error = true;
+      message = `Invalid Start Time. Conflict with existing schedule time, ${sch.startTime}-${sch.endTime}`;
+      return true;
+    }
+    else if (endHour > currentStartHour && endHour < currentEndHour) {
+      error = true;
+      message = `Invalid End Time. Conflict with existing schedule time, ${sch.startTime}-${sch.endTime}`;
+      return true;
+    }
+    else {
+      error = false;
+      message = '';
+    }
+  });
+
+  return { error, message };
 }

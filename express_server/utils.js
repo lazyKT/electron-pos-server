@@ -12,9 +12,22 @@ exports.asyncFilter = async function (arr, cb) {
 
 
 exports.isValidTime = function (str) {
-  const re = new RegExp(/^([0]?[1-9]|1[0-2]):([0-5]\d)\s?(AM|PM)$/i);
+  const re = new RegExp(/^([0]?[1-9]|1[0-2]):([0-5]\d)\s(AM|PM)$/i);
 
   return re.test(str);
+}
+
+
+// convert to 24-hour format hour
+// 1 PM -> 13
+// 2 PM -> 14
+exports.to24HourFormat = function (time) {
+  const period = time.slice(-2);
+  const hour = parseInt(time.split(':')[0]);
+
+  if (hour === 12)  return 12;
+
+  return (period.toLowerCase() === 'pm') ? hour + 12 : hour;
 }
 
 
