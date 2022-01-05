@@ -96,6 +96,7 @@ exports.validateScheduleTiming = function (schedules, requestBody) {
 
   let message = '';
   let error = false;
+
   const startHour = to24HourFormat(requestBody.startTime);
   const endHour = to24HourFormat(requestBody.endTime);
 
@@ -103,8 +104,13 @@ exports.validateScheduleTiming = function (schedules, requestBody) {
 
     const currentStartHour = to24HourFormat(sch.startTime);
     const currentEndHour = to24HourFormat(sch.endTime);
-    
-    if (startHour === currentStartHour) {
+
+
+    if (parseInt(requestBody.day) !== sch.day) {
+      error = false;
+      message = '';
+    }
+    else if (startHour === currentStartHour) {
       error = true;
       message = `Invalid Start Time. Conflict with existing schedule time, ${sch.startTime}-${sch.endTime}`;
       return true;
