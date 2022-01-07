@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 
-const { Service } = require('../schemas/service');
+const { Doctor } = require('../schemas/doctor');
 const { Employee } = require('../schemas/employee');
 const { Booking, validateBookingEntry } = require('../schemas/booking');
 const { BookingTimeSlot } = require('../schemas/bookingTimeSlot');
@@ -58,72 +58,58 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
 
-    const bookingId = generateId('b');
-    const requestBody = {
-      ...(req.body),
-      bookingId
-    };
+    const { error } = validateBookingEntry(req.body);
 
-    const { error } = validateBookingEntry(requestBody);
-
-    if (error) {
-      requestLogger(`[POST] ${req.baseUrl}/ - 400`);
-      return res.status(400).send(JSON.stringify({'message' : error.details[0].message}));
+    // validate receptionist
+    if (!mongoose.Types.ObjectId.isValid(req.body.receptionistId)) {
+      requestLogger(`[POST] ${req.baseUrl} - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Invalid Employee Id'}));
     }
 
-    if (!mongoose.Types.ObjectId.isValid(requestBody.receptionistId)) {
-      requestLogger(`[POST] ${req.baseUrl}/ - 400`);
-      return res.status(400).send(JSON.stringify({'message' : 'Invalid receptionistId'}));
-    }
-
-    const employee = await Employee.findById(requestBody.receptionistId);
+    const employee = await Employee.findById(req.body.receptionistId);
     if (!employee) {
       requestLogger(`[POST] ${req.baseUrl} - 400`);
       return res.status(400).send(JSON.stringify({'message' : 'Employee Not Found!'}));
     }
 
-    if (!mongoose.Types.ObjectId.isValid(requestBody.serviceId)) {
-      requestLogger(`[POST] ${req.baseUrl}/ - 400`);
-      return res.status(400).send(JSON.stringify({'message' : 'Invalid serviceId'}));
-    }
-
-    const service = await Service.findById(requestBody.serviceId);
-    if (!service) {
+    // validate doctor
+    if (!mongoose.Types.ObjectId.isValid(req.body.doctorId)) {
       requestLogger(`[POST] ${req.baseUrl} - 400`);
-      return res.status(400).send(JSON.stringify({'message' : 'Service Not Found!'}));
+      return res.status(400).send(JSON.stringify({'message' : 'Invalid Doctor Id'}));
     }
 
-    if (!mongoose.Types.ObjectId.isValid(requestBody.timeSlot)) {
-      requestLogger(`[POST] ${req.baseUrl}/ - 400`);
-      return res.status(400).send(JSON.stringify({'message' : 'Invalid timeSlotId'}));
+    const doctor = await Doctor.findById(req.body.doctorId);
+    if (!doctor) {
+      requestLogger(`[POST] ${req.baseUrl} - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Doctor Not Found!'}));
     }
 
-    const timeSlot = await BookingTimeSlot.findById(requestBody.timeSlot);
-    if (!timeSlot) {
-      requestLogger(`[POST] ${req.baseUrl}/ - 400`);
-      return res.status(400).send(JSON.stringify({'message' : 'TimeSlot Not Found!'}));
-    }
+    console.log(req.body.dateTime, req.body.timeSlot);
 
+    const existingBookings = await Booking.find(
+      { 'timeSlot' : { $regex : req.body.timeSlot, $options: 'i' }}
+    );
+
+    const bookingId = existingBookings.length + 1;
+
+    console.log(bookingId);
 
     let booking = new Booking({
-      bookingId: bookingId,
-      receptionistId: req.body.receptionistId,
-      receptionistName: req.body.receptionistName,
-      serviceName: service.name,
-      serviceId: req.body.serviceId,
-      assignedStaffName: req.body.assignedStaffName,
+      bookingId,
+      receptionistName: employee.fullName,
+      receptionistId: employee._id,
+      doctorName: doctor.name,
+      doctorId: doctor._id,
       patientName: req.body.patientName,
-      patientId: req.body.patientId ? req.body.patientId : 'N.A',
       patientContact: req.body.patientContact,
-      bookingDate: req.body.bookingDate,
+      dateTime: new Date(req.body.dateTime),
       timeSlot: req.body.timeSlot,
-      bookingTime: `${timeSlot.startTime} - ${timeSlot.endTime}`,
-      status: req.body.status,
-      remarks: req.body.remarks,
+      remark: req.body.remark ? req.body.remark : ''
     });
 
     booking = await booking.save();
 
+    requestLogger(`[POST] ${req.baseUrl} - 201`);
     return res.status(201).send(booking);
   }
   catch (error) {
@@ -134,17 +120,14 @@ router.post('/', async (req, res) => {
 });
 
 
-// search booking by patient name (or) servie name
+// search booking by doctor
 router.get('/search', async (req, res) => {
   try {
     let filters = [];
     let bookings = [];
 
-    if (req.query.service && req.query.servie !== '')
-      filters.push({'serviceName' :  { $regex: req.query.service, $options: 'i'} });
-
-    if (req.query.patient && req.query.patient !== '')
-      filters.push({'patientName' : { $regex: req.query.patient, $options: 'i'} });
+    if (req.query.doctor && req.query.doctor !== '' && mongoose.Types.ObjectId.isValid(req.query.doctor))
+      filters.push({'doctorId' :  { $regex: req.query.doctor, $options: 'i'} });
 
     if (filters.length !== 0) {
       bookings = await Booking.find({

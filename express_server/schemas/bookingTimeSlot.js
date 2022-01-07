@@ -16,6 +16,10 @@ const Joi = require('joi');
 
 
 const schema = new mongoose.Schema({
+  slot_id: {
+    type: String,
+    required: true
+  },
   startTime: {
     type: String,
     required: true
