@@ -20,15 +20,11 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  serviceName: {
+  doctorName: {
     type: String,
     required: true
   },
-  serviceId: {
-    type: String,
-    required: true
-  },
-  assignedStaffName: {
+  doctorId: {
     type: String,
     required: true
   },
@@ -36,43 +32,30 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  patientId: {
-    type: String,
-    required: true
-  },
   patientContact: {
     type: String,
     required: true
   },
-  bookingDate: {
+  remark: {
+    type: String,
+    default: ''
+  },
+  dateTime: {
     type: Date,
-    required: true
+    expires: 0
   },
   timeSlot: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'booking_time_slot'
-  },
-  bookingTime: {
     type: String,
     required: true
-  },
-  status: {
-    type: String,
-    default: 'inactive'
-  },
-  remarks: {
-    type: String,
-    default: 'N.A'
   },
   created: {
     type: Date,
-    default: new Date(),
-  },
-  updated: {
-    type: Date,
-    default: new Date()
+    default: Date.now,
   }
 });
+
+// create TTL index for Expiration
+bookingSchema.index({dateTime: 1}, {expireAfterSeconds: 3600});
 
 
 const Booking = new mongoose.model('Booking', bookingSchema);
@@ -81,17 +64,13 @@ const Booking = new mongoose.model('Booking', bookingSchema);
 function validateBookingEntry (booking) {
 
   const schema = Joi.object({
-    bookingId: Joi.string().required(),
-    receptionistName: Joi.string().required(),
     receptionistId: Joi.string().required(),
-    serviceId: Joi.string().required(),
-    assignedStaffName: Joi.string().required(),
+    doctorId: Joi.string().required(),
     patientName: Joi.string().required(),
-    patientId: Joi.string().allow('').allow(null),
     patientContact: Joi.string().required(),
-    status: Joi.string().required(),
     remarks: Joi.string().allow(''),
-    bookingDate: Joi.date()
+    timeSlot: Joi.string().required(),
+    dateTime: Joi.date()
                 .format('YYYY-MM-DD')
                 .raw()
                 .greater('now')
@@ -105,7 +84,6 @@ function validateBookingEntry (booking) {
                   'date.format.javascript': `'dateTime' date format wrong javascript`,
                   'date.format.unix': `'dateTime' date format wrong unix`
                 }),
-    timeSlot: Joi.string().required()
   });
 
   return schema.validate(booking);
