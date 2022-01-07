@@ -161,104 +161,104 @@ router.get('/count', async (req, res) => {
 });
 
 
-// get bookings by date
-router.get('/available-slots', async (req, res) => {
-  try {
-    if (!req.query.date || req.query.date === '') {
-      requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
-      return res.status(400).send(JSON.stringify({'message' : 'Empty Date!'}));
-    }
-
-    let date1 = new Date(req.query.date);
-
-    if (!(date1 instanceof Date)) {
-      requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
-      return res.status(400).send(JSON.stringify({'message' : 'Invalid Date!'}));
-    }
-
-    let date2 = new Date(req.query.date);
-    date1.setDate(date1.getDate() + 1);
-
-
-
-    BookingTimeSlot.find().lean()
-      .then( async function (slots) {
-        if (!slots)
-          throw new Error('Error Fetching Time Slots');
-
-        const availableSlots = await asyncFilter(slots, async (slot) => {
-
-          const booking = await Booking.findOne({
-            'bookingDate' : {
-              $gte: date2,
-              $lt: date1
-            },
-            'timeSlot' : slot._id
-          });
-
-          return booking === null;
-        });
-
-        requestLogger(`[GET] ${req.baseUrl}/available-slots - 200`);
-        return res.status(200).send(availableSlots);
-      });
-  }
-  catch (error) {
-    console.error(error);
-    requestLogger(`[GET] ${req.baseUrl}/by-date - 500`);
-    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
-  }
-});
-
-
-// get all booking time slots
-router.get('/all-slots', async (req, res) => {
-  try {
-    const slots = await BookingTimeSlot.find();
-
-    res.status(200).send(slots);
-  }
-  catch (error) {
-    requestLogger(`[GET] ${req.baseUrl}/all-slots - 500`);
-    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
-  }
-});
-
-
-// get available timeslots for the given date
-router.get('/by-date', async (req, res) => {
-  try {
-    if (!req.query.date || req.query.date === '') {
-      requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
-      return res.status(400).send(JSON.stringify({'message' : 'Empty Date!'}));
-    }
-
-    let date1 = new Date(req.query.date);
-
-    if (!(date1 instanceof Date)) {
-      requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
-      return res.status(400).send(JSON.stringify({'message' : 'Invalid Date!'}));
-    }
-
-    let date2 = new Date(req.query.date);
-    date1.setDate(date1.getDate() + 1);
-    // console.log(date1, date2);
-    const bookings = await Booking.find({
-      'bookingDate' : {
-        $gte: date2,
-        $lt: date1
-      }
-    });
-
-    requestLogger(`[GET] ${req.baseUrl}/by-date - 200`);
-    res.status(200).send(bookings);
-  }
-  catch (error) {
-    console.error(error);
-    requestLogger(`[GET] ${req.baseUrl}/available-slots - 500`);
-    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
-  }
-});
+// // get bookings by date
+// router.get('/available-slots', async (req, res) => {
+//   try {
+//     if (!req.query.date || req.query.date === '') {
+//       requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
+//       return res.status(400).send(JSON.stringify({'message' : 'Empty Date!'}));
+//     }
+//
+//     let date1 = new Date(req.query.date);
+//
+//     if (!(date1 instanceof Date)) {
+//       requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
+//       return res.status(400).send(JSON.stringify({'message' : 'Invalid Date!'}));
+//     }
+//
+//     let date2 = new Date(req.query.date);
+//     date1.setDate(date1.getDate() + 1);
+//
+//
+//
+//     BookingTimeSlot.find().lean()
+//       .then( async function (slots) {
+//         if (!slots)
+//           throw new Error('Error Fetching Time Slots');
+//
+//         const availableSlots = await asyncFilter(slots, async (slot) => {
+//
+//           const booking = await Booking.findOne({
+//             'bookingDate' : {
+//               $gte: date2,
+//               $lt: date1
+//             },
+//             'timeSlot' : slot._id
+//           });
+//
+//           return booking === null;
+//         });
+//
+//         requestLogger(`[GET] ${req.baseUrl}/available-slots - 200`);
+//         return res.status(200).send(availableSlots);
+//       });
+//   }
+//   catch (error) {
+//     console.error(error);
+//     requestLogger(`[GET] ${req.baseUrl}/by-date - 500`);
+//     res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+//   }
+// });
+//
+//
+// // get all booking time slots
+// router.get('/all-slots', async (req, res) => {
+//   try {
+//     const slots = await BookingTimeSlot.find();
+//
+//     res.status(200).send(slots);
+//   }
+//   catch (error) {
+//     requestLogger(`[GET] ${req.baseUrl}/all-slots - 500`);
+//     res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+//   }
+// });
+//
+//
+// // get available timeslots for the given date
+// router.get('/by-date', async (req, res) => {
+//   try {
+//     if (!req.query.date || req.query.date === '') {
+//       requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
+//       return res.status(400).send(JSON.stringify({'message' : 'Empty Date!'}));
+//     }
+//
+//     let date1 = new Date(req.query.date);
+//
+//     if (!(date1 instanceof Date)) {
+//       requestLogger(`[GET] ${req.baseUrl}/available-slots - 400`);
+//       return res.status(400).send(JSON.stringify({'message' : 'Invalid Date!'}));
+//     }
+//
+//     let date2 = new Date(req.query.date);
+//     date1.setDate(date1.getDate() + 1);
+//     // console.log(date1, date2);
+//     const bookings = await Booking.find({
+//       'bookingDate' : {
+//         $gte: date2,
+//         $lt: date1
+//       }
+//     });
+//
+//     requestLogger(`[GET] ${req.baseUrl}/by-date - 200`);
+//     res.status(200).send(bookings);
+//   }
+//   catch (error) {
+//     console.error(error);
+//     requestLogger(`[GET] ${req.baseUrl}/available-slots - 500`);
+//     res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+//   }
+// });
 
 
 // get booking by id
