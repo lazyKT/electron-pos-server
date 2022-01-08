@@ -65,6 +65,18 @@ function validateWorkingSchedule (schedule) {
   return schema.validate(schedule);
 }
 
+
+function validateCheckScheduleRequest (requestBody) {
+  const schema = Joi.object({
+    doctorId: Joi.string().required(),
+    time: Joi.string().required(),
+    day: Joi.number().min(0).max(6).required()
+  });
+
+  return schema.validate(requestBody);
+}
+
 exports.Doctor = Doctor;
 exports.validateDoctorEntry = validateDoctorEntry;
 exports.validateWorkingSchedule = validateWorkingSchedule;
+exports.validateCheckScheduleRequest = validateCheckScheduleRequest;

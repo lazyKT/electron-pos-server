@@ -7,10 +7,15 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const Lodash = require('lodash');
 
-const { Doctor, validateDoctorEntry, validateWorkingSchedule } = require('../schemas/doctor.js');
+const {
+  Doctor,
+  validateDoctorEntry,
+  validateWorkingSchedule,
+  validateCheckScheduleRequest
+} = require('../schemas/doctor.js');
 const { requestLogger } = require('../logger');
 const { validateScheduleTiming } = require('../validateRequest');
-const { isValidTime, generateId } = require('../utils');
+const { isValidTime, generateId, to24HourFormat } = require('../utils');
 const validateObjectId = require('../middlewares/validateObjectId');
 
 
@@ -202,6 +207,59 @@ router.put ('/remove-schedule', async (req, res) => {
   catch (error) {
     console.error(error.message);
     requestLogger(`[PUT] ${req.baseUrl}/remove-schedule - 500`);
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+  }
+});
+
+
+// check whether the given datetime is fall inside doctor schedule
+router.get('/check-schedule', async (req, res) => {
+  try {
+
+    const requestQueries = {
+      doctorId: req.query.doctor,
+      time: req.query.time,
+      day: req.query.day
+    }
+
+    const { error } = validateCheckScheduleRequest(requestQueries);
+
+    if (error) {
+      requestLogger(`[GET] ${req.baseUrl}/check-schedule - 400`);
+      return res.status(400).send(JSON.stringify({'message' : error.details[0].message}));
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(requestQueries.doctorId)) {
+      requestLogger(`[GET] ${req.baseUrl}/check-schedule - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Invalid Doctor ID!'}));
+    }
+
+    const doctor = await Doctor.findById(requestQueries.doctorId);
+    if (!doctor) {
+      requestLogger(`[GET] ${req.baseUrl}/check-schedule - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Doctor Not Found!'}));
+    }
+
+    const workingSchedule = doctor.workingSchedule;
+    const bookingTime = parseInt((requestQueries.time).split(':')[0]);
+    let isRegular = false;
+
+    workingSchedule.some( ws => {
+
+      const startHour = to24HourFormat(ws.startTime);
+      const endHour = to24HourFormat(ws.endTime);
+
+      if (ws.day === parseInt(requestQueries.day) && bookingTime >= startHour && bookingTime <= endHour) {
+        isRegular = true;
+        return true;
+      }
+    });
+
+    return res.status(200).send(JSON.stringify({'doctor' : doctor.name,'isRegular' : isRegular}));
+  }
+  catch (error) {
+    console.error(error);
+    requestLogger(`[GET] ${req.baseUrl}/check-schedule - 500`);
     res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
   }
 });
