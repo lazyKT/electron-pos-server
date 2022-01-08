@@ -63,7 +63,7 @@ router.post('/', async (req, res) => {
         ...req.body,
         timeSlot: req.body.dateTime
       }
-    console.log(req.body);
+
     const { error } = validateBookingEntry(req.body);
     if (error) {
       requestLogger(`[POST] ${req.baseUrl} - 400`);
@@ -94,15 +94,11 @@ router.post('/', async (req, res) => {
       return res.status(400).send(JSON.stringify({'message' : 'Doctor Not Found!'}));
     }
 
-    console.log(req.body.dateTime, req.body.timeSlot);
-
     const existingBookings = await Booking.find(
       { 'timeSlot' : { $regex : req.body.timeSlot, $options: 'i' }}
     );
 
     const bookingId = existingBookings.length + 1;
-
-    console.log(bookingId);
 
     let booking = new Booking({
       bookingId,

@@ -215,40 +215,47 @@ router.put ('/remove-schedule', async (req, res) => {
 // check whether the given datetime is fall inside doctor schedule
 router.get('/check-schedule', async (req, res) => {
   try {
-    const { error } = validateCheckScheduleRequest(req.body);
+
+    const requestQueries = {
+      doctorId: req.query.doctor,
+      time: req.query.time,
+      day: req.query.day
+    }
+
+    const { error } = validateCheckScheduleRequest(requestQueries);
 
     if (error) {
       requestLogger(`[GET] ${req.baseUrl}/check-schedule - 400`);
       return res.status(400).send(JSON.stringify({'message' : error.details[0].message}));
     }
 
-    if (!mongoose.Types.ObjectId.isValid(req.body.doctorId)) {
+    if (!mongoose.Types.ObjectId.isValid(requestQueries.doctorId)) {
       requestLogger(`[GET] ${req.baseUrl}/check-schedule - 400`);
       return res.status(400).send(JSON.stringify({'message' : 'Invalid Doctor ID!'}));
     }
 
-    const doctor = await Doctor.findById(req.body.doctorId);
+    const doctor = await Doctor.findById(requestQueries.doctorId);
     if (!doctor) {
       requestLogger(`[GET] ${req.baseUrl}/check-schedule - 400`);
       return res.status(400).send(JSON.stringify({'message' : 'Doctor Not Found!'}));
     }
 
     const workingSchedule = doctor.workingSchedule;
-    const bookingTime = parseInt((req.body.time).split(':')[0]);
+    const bookingTime = parseInt((requestQueries.time).split(':')[0]);
     let isRegular = false;
 
     workingSchedule.some( ws => {
-      
+
       const startHour = to24HourFormat(ws.startTime);
       const endHour = to24HourFormat(ws.endTime);
 
-      if (ws.day === req.body.day && bookingTime >= startHour && bookingTime <= endHour) {
+      if (ws.day === parseInt(requestQueries.day) && bookingTime >= startHour && bookingTime <= endHour) {
         isRegular = true;
         return true;
       }
     });
 
-    return res.status(200).send(JSON.stringify({'isRegular' : isRegular}));
+    return res.status(200).send(JSON.stringify({'doctor' : doctor.name,'isRegular' : isRegular}));
   }
   catch (error) {
     console.error(error);
