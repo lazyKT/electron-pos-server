@@ -167,6 +167,42 @@ router.get('/count', async (req, res) => {
 });
 
 
+// get bookings by dateTime slot
+router.get('/datetime', async(req, res) => {
+  try {
+    if (!req.query.doctor || req.query.doctor === '') {
+      requestLogger (`[GET] ${req.baseUrl}/datetime - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Doctor Id is Required*'}));
+    }
+
+    if (!req.query.dateTime || req.query.dateTime === '') {
+      requestLogger (`[GET] ${req.baseUrl}/datetime - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Booking Date & Time is Required*'}));
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(req.query.doctor)) {
+      requestLogger (`[GET] ${req.baseUrl}/datetime - 400`);
+      return res.status(400).send(JSON.stringify({'message' : 'Invalid Doctor Id!'}));
+    }
+
+    const bookings = await Booking.find({
+      $and: [
+        {'doctorId' : { $regex: req.query.doctor, $options : 'i' }},
+        {'dateTime' : { $lte: req.query.dateTime, $gte: req.query.dateTime }}
+      ]
+    });
+
+    requestLogger (`[GET] ${req.baseUrl}/datetime - 200`);
+    return res.status(200).send(bookings);
+  }
+  catch (error) {
+    console.error(error);
+    requestLogger(`[GET] ${req.baseUrl}/datetime - 500`);
+    res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
+  }
+});
+
+
 // // get bookings by date
 // router.get('/available-slots', async (req, res) => {
 //   try {
