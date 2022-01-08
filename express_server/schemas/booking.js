@@ -71,7 +71,6 @@ function validateBookingEntry (booking) {
     remarks: Joi.string().allow(''),
     timeSlot: Joi.string().required(),
     dateTime: Joi.date()
-                .format('YYYY-MM-DD')
                 .raw()
                 .greater('now')
                 .required()

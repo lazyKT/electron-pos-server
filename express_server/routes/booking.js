@@ -58,7 +58,17 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
 
+    if (!req.body.timeSlot)
+      req.body = {
+        ...req.body,
+        timeSlot: req.body.dateTime
+      }
+    console.log(req.body);
     const { error } = validateBookingEntry(req.body);
+    if (error) {
+      requestLogger(`[POST] ${req.baseUrl} - 400`);
+      return res.status(400).send(JSON.stringify({'message' : error.details[0].message}))
+    }
 
     // validate receptionist
     if (!mongoose.Types.ObjectId.isValid(req.body.receptionistId)) {
