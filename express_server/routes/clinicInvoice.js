@@ -9,6 +9,8 @@ const router = express.Router();
 const { ClinicInvoice, validateClinicInvoice } = require('../schemas/clinicInvoice');
 const { Employee } = require('../schemas/employee');
 const { Medicine } = require('../schemas/medicine');
+const { Doctor } = require('../schemas/doctor');
+const { Service } = require('../schemas/service');
 const { validateServiceAndMedicinesItems } = require('../validateRequest');
 const { requestLogger } = require('../logger');
 
@@ -51,8 +53,36 @@ router.post('/', async (req, res) => {
 		const emp = await Employee.findById(req.body.employeeID);
 		if (!emp) {
 			requestLogger(`[POST] ${req.baseUrl} - 400`);
-      console.log("Employee Not Found!");
 			return res.status(400).send(JSON.stringify({"message" : "Employee Not Found!"}));
+		}
+
+		// validate doctor in the request body
+		if (!mongoose.Types.ObjectId.isValid(req.body.doctorID)) {
+      requestLogger(`[POST] ${req.baseUrl} - 400`);
+      return res.status(400).send(JSON.stringify({"message" : 'Invalid ObjectId Received: doctorID'}));
+    }
+
+		const doctor = await Doctor.findById(req.body.doctorID);
+		if (!doctor) {
+			requestLogger(`[POST] ${req.baseUrl} - 400`);
+			return res.status(400).send(JSON.stringify({"message" : "Doctor Not Found!"}));
+		}
+
+		// service validation
+		let validateServiceError = false;
+		req.body.services.some(async s => {
+			if (s.remarks !== 'Others') {
+				const service = await Service.findById(s.id);
+				if (!service) {
+					validateServiceError = true;
+					return true;
+				}
+			}
+		});
+
+		if (validateServiceError) {
+			requestLogger(`[POST] ${req.baseUrl} - 400`);
+			return res.status(400).send(JSON.stringify({"message" : "Invalid Service Found in Request Body!"}));
 		}
 
 
