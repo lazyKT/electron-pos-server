@@ -55,7 +55,7 @@ const bookingSchema = new mongoose.Schema({
 });
 
 // create TTL index for Expiration
-bookingSchema.index({dateTime: 1}, {expireAfterSeconds: 3600});
+bookingSchema.index({dateTime: 1}, {expireAfterSeconds: 7200});
 
 
 const Booking = new mongoose.model('Booking', bookingSchema);
