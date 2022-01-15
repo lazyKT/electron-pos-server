@@ -34,9 +34,22 @@ router.get('/', async (req, res) => {
       sort = req.query.sort;
 
     sortObj[sort] = order;
+    let filters = [ { 'doctorName' : { $regex : '', $options: 'i' }} ];
+
+    if (req.query.q && req.query.q !== '') {
+        filters = [
+          { 'doctorName' : { $regex : req.query.q, $options: 'i' }},
+          { 'patientName' : { $regex: req.query.q, $options: 'i' }},
+          { 'patientContact' : { $regex: req.query.q, $options: 'i' }}
+        ]
+    }
 
     const bookings = await Booking.find(
-      {},
+      {
+        $or: [
+          ...filters
+        ]
+      },
       null,
       {
         skip: page * limit,
@@ -48,6 +61,7 @@ router.get('/', async (req, res) => {
     res.status(200).send(bookings);
   }
   catch (error) {
+    console.error(error.message);
     requestLogger(`[GET] ${req.baseUrl} - 500`);
     res.status(500).send(JSON.stringify({'message' : 'Internal Server Error!'}));
   }
