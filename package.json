@@ -1,7 +1,7 @@
 {
   "name": "ces-server",
   "version": "0.1.1",
-  "description": "",
+  "description": "### Express Local Server with Electron App #### Run/listen express server in child process and logging out the server logs inside electron browser window.",
   "main": "main.js",
   "scripts": {
     "test": "jest --verbose --forceExit --detectOpenHandles",
@@ -25,5 +25,16 @@
     "mongoose": "^6.0.12",
     "nodemon": "^2.0.14",
     "supertest": "^6.1.6"
-  }
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michellehna/electron-pos-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/michellehna/electron-pos-server/issues"
+  },
+  "homepage": "https://github.com/michellehna/electron-pos-server#readme"
 }
