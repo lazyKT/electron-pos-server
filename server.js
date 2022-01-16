@@ -40,7 +40,7 @@ const pharmacyInvoice = require("./express_server/routes/pharmacyInvoice");
 const clinicInvoice = require("./express_server/routes/clinicInvoice");
 const booking = require("./express_server/routes/booking");
 const services = require('./express_server/routes/service');
-
+const specialization = require('./express_server/routes/specialization');
 
 const app = express();
 
@@ -55,7 +55,7 @@ app.use("/api/pharmacy/invoices", pharmacyInvoice);
 app.use("/api/clinic/invoices", clinicInvoice);
 app.use("/api/bookings", booking);
 app.use("/api/services", services);
-
+app.use("/api/specialization", specialization);
 
 process.on("message", m => {
   if (m === "PORT") {

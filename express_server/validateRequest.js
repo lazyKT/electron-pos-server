@@ -106,7 +106,7 @@ exports.validateScheduleTiming = function (schedules, requestBody) {
     const currentEndHour = to24HourFormat(sch.endTime);
 
 
-    if (parseInt(requestBody.day) !== sch.day) {
+    if (parseInt(requestBody.day) !== parseInt(sch.day)) {
       error = false;
       message = '';
     }
